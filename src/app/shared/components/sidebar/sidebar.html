@@ -1,0 +1,138 @@
+<!-- Sidebar overlay for mobile -->
+<div
+  *ngIf="isOpen"
+  class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+  (click)="onCloseSidebar()"
+></div>
+
+<!-- Sidebar -->
+<aside
+  class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0"
+  [class.translate-x-0]="isOpen"
+  [class.-translate-x-full]="!isOpen"
+>
+  <!-- Sidebar header -->
+  <div class="flex items-center justify-between h-16 px-6 border-b border-secondary-200">
+    <div class="flex items-center space-x-3">
+      <div class="h-8 w-8 bg-primary-600 rounded-lg flex items-center justify-center">
+        <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+        </svg>
+      </div>
+      <span class="text-lg font-semibold text-secondary-900">SOP Portal</span>
+    </div>
+    
+    <!-- Close button for mobile -->
+    <button
+      type="button"
+      class="lg:hidden p-2 rounded-md text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 transition-colors"
+      (click)="onCloseSidebar()"
+    >
+      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- User info section -->
+  <div class="px-6 py-4 border-b border-secondary-200 bg-secondary-50">
+    <div class="flex items-center space-x-3">
+      <div class="h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-semibold" [class]="getRoleColor()">
+        {{ getUserInitials() }}
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-secondary-900 truncate">{{ getUserInfo().name }}</p>
+        <p class="text-xs text-secondary-600 truncate">{{ getUserInfo().employeeCode }}</p>
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1" [class]="getRoleBadgeColor()">
+          {{ getUserInfo().role }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation menu -->
+  <nav class="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+    <div
+      *ngFor="let item of navigationItems"
+      class="relative"
+    >
+      <button
+        type="button"
+        class="w-full group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+        [class]="isRouteActive(item.route) 
+          ? 'bg-primary-100 text-primary-700 border-r-2 border-primary-600' 
+          : 'text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900'"
+        (click)="onNavigate(item.route)"
+      >
+        <!-- Icon -->
+        <svg 
+          class="mr-3 h-5 w-5 transition-colors"
+          [class]="isRouteActive(item.route) ? 'text-primary-600' : 'text-secondary-400 group-hover:text-secondary-600'"
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getIconPath(item.icon)"></path>
+        </svg>
+        
+        <!-- Label -->
+        <span class="truncate">{{ item.label }}</span>
+        
+        <!-- Active indicator -->
+        <div
+          *ngIf="isRouteActive(item.route)"
+          class="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-primary-600 rounded-l-full"
+        ></div>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Quick actions section -->
+  <div class="px-4 py-4 border-t border-secondary-200 bg-secondary-50">
+    <div class="space-y-1">
+      <button
+        type="button"
+        class="w-full group flex items-center px-3 py-2 text-sm font-medium text-secondary-600 rounded-lg hover:bg-secondary-100 hover:text-secondary-900 transition-colors"
+        (click)="onProfile()"
+      >
+        <svg class="mr-3 h-4 w-4 text-secondary-400 group-hover:text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+        </svg>
+        Profile
+      </button>
+      
+      <button
+        type="button"
+        class="w-full group flex items-center px-3 py-2 text-sm font-medium text-secondary-600 rounded-lg hover:bg-secondary-100 hover:text-secondary-900 transition-colors"
+        (click)="onChangePassword()"
+      >
+        <svg class="mr-3 h-4 w-4 text-secondary-400 group-hover:text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+        </svg>
+        Change Password
+      </button>
+      
+      <button
+        type="button"
+        class="w-full group flex items-center px-3 py-2 text-sm font-medium text-danger-600 rounded-lg hover:bg-danger-50 hover:text-danger-700 transition-colors"
+        (click)="onLogout()"
+      >
+        <svg class="mr-3 h-4 w-4 text-danger-500 group-hover:text-danger-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+        </svg>
+        Sign Out
+      </button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="px-6 py-3 border-t border-secondary-200">
+    <div class="flex items-center justify-between">
+      <span class="text-xs text-secondary-500">SOP Portal v1.0</span>
+      <div class="flex items-center space-x-1">
+        <div class="h-2 w-2 bg-success-400 rounded-full"></div>
+        <span class="text-xs text-secondary-500">Online</span>
+      </div>
+    </div>
+  </div>
+</aside>

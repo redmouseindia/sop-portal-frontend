@@ -1,0 +1,223 @@
+/* Login Component Styles */
+
+/* Custom animations */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+/* Enhanced form focus states */
+.form-input:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Custom button hover effects */
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Enhanced card shadow */
+.login-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Custom input validation states */
+.input-error {
+  animation: shake 0.3s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* Loading spinner enhancement */
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Icon hover effects */
+.icon-hover {
+  transition: all 0.2s ease;
+}
+
+.icon-hover:hover {
+  transform: scale(1.1);
+  color: #3b82f6;
+}
+
+/* Success/Error message animations */
+.alert-enter {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Background gradient enhancement */
+.login-background {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%);
+  min-height: 100vh;
+}
+
+/* Responsive design enhancements */
+@media (max-width: 640px) {
+  .login-card {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  
+  .login-title {
+    font-size: 1.5rem;
+  }
+}
+
+/* Focus trap for accessibility */
+.form-group:focus-within label {
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+/* Enhanced development credentials styling */
+.dev-credentials {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-left: 4px solid #f59e0b;
+}
+
+.dev-credentials p {
+  margin: 0.25rem 0;
+}
+
+.dev-credentials strong {
+  color: #92400e;
+}
+
+/* Custom scrollbar for development section */
+.dev-credentials::-webkit-scrollbar {
+  width: 4px;
+}
+
+.dev-credentials::-webkit-scrollbar-track {
+  background: #fef3c7;
+}
+
+.dev-credentials::-webkit-scrollbar-thumb {
+  background: #f59e0b;
+  border-radius: 2px;
+}
+
+/* Logo animation */
+.logo-container {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Enhanced form validation styling */
+.field-invalid input {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+.field-invalid label {
+  color: #ef4444 !important;
+}
+
+/* Password visibility button enhancement */
+.password-toggle {
+  transition: all 0.2s ease;
+}
+
+.password-toggle:hover {
+  background-color: rgba(107, 114, 128, 0.1);
+  border-radius: 4px;
+}
+
+/* Form field spacing improvements */
+.form-field {
+  margin-bottom: 1.5rem;
+}
+
+.form-field:last-child {
+  margin-bottom: 0;
+}
+
+/* Enhanced error/success message styling */
+.message-container {
+  border-radius: 8px;
+  border-width: 1px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.error-message {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.success-message {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+/* Print styles */
+@media print {
+  .login-background {
+    background: white !important;
+  }
+  
+  .dev-credentials {
+    display: none !important;
+  }
+  
+  .login-card {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+}

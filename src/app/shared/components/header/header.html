@@ -1,0 +1,237 @@
+<header class="bg-white shadow-sm border-b border-secondary-200 sticky top-0 z-40">
+  <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+    <!-- Left side: Sidebar toggle and title -->
+    <div class="flex items-center space-x-4">
+      <!-- Sidebar toggle button -->
+      <button
+        *ngIf="showSidebarToggle"
+        type="button"
+        class="lg:hidden p-2 rounded-md text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+        (click)="onToggleSidebar()"
+        aria-label="Toggle sidebar"
+      >
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+
+      <!-- Logo and title -->
+      <div class="flex items-center space-x-3">
+        <div class="h-8 w-8 bg-primary-600 rounded-lg flex items-center justify-center cursor-pointer" (click)="navigateToHome()">
+          <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+          </svg>
+        </div>
+        <div class="hidden sm:block">
+          <h1 class="text-xl font-semibold text-secondary-900 cursor-pointer" (click)="navigateToHome()">{{ title }}</h1>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right side: Navigation and user menu -->
+    <div class="flex items-center space-x-4">
+      <!-- Quick navigation (desktop only) -->
+      <nav class="hidden md:flex items-center space-x-1">
+        <button
+          type="button"
+          class="px-3 py-2 rounded-md text-sm font-medium text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 transition-colors"
+          (click)="navigateToHome()"
+        >
+          Dashboard
+        </button>
+        <button
+          *ngIf="isAdmin() || isManager()"
+          type="button"
+          class="px-3 py-2 rounded-md text-sm font-medium text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 transition-colors"
+          (click)="navigateToReports()"
+        >
+          Reports
+        </button>
+        <button
+          *ngIf="isAdmin()"
+          type="button"
+          class="px-3 py-2 rounded-md text-sm font-medium text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 transition-colors"
+          (click)="navigateToUsers()"
+        >
+          Users
+        </button>
+      </nav>
+
+      <!-- Notifications -->
+      <div class="relative">
+        <button
+          type="button"
+          class="p-2 rounded-md text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors relative"
+          (click)="toggleNotifications()"
+          [class.bg-secondary-100]="showNotifications"
+        >
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-3.405-3.405A1.994 1.994 0 0117 12V9a5 5 0 10-10 0v3c0 .53-.217 1.04-.595 1.405L3 17h5m8 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+          </svg>
+          <!-- Notification badge -->
+          <span
+            *ngIf="notificationCount > 0"
+            class="absolute -top-1 -right-1 h-5 w-5 bg-danger-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
+          >
+            {{ notificationCount > 9 ? '9+' : notificationCount }}
+          </span>
+        </button>
+
+        <!-- Notifications dropdown -->
+        <div
+          *ngIf="showNotifications"
+          class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-secondary-200 z-50 animate-fade-in"
+          (click)="$event.stopPropagation()"
+        >
+          <!-- Notifications header -->
+          <div class="px-4 py-3 border-b border-secondary-200 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-secondary-900">Notifications</h3>
+            <button
+              type="button"
+              class="text-xs text-primary-600 hover:text-primary-800 font-medium"
+              (click)="clearAllNotifications()"
+            >
+              Clear all
+            </button>
+          </div>
+
+          <!-- Notifications list -->
+          <div class="max-h-80 overflow-y-auto">
+            <div
+              *ngFor="let notification of getNotifications()"
+              class="px-4 py-3 hover:bg-secondary-50 border-b border-secondary-100 last:border-b-0 cursor-pointer transition-colors"
+              (click)="markNotificationAsRead(notification.id)"
+            >
+              <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0">
+                  <div class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
+                    <svg class="h-4 w-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getNotificationIcon(notification.icon)"></path>
+                    </svg>
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-secondary-900 truncate">{{ notification.title }}</p>
+                    <span
+                      *ngIf="notification.unread"
+                      class="ml-2 h-2 w-2 bg-primary-600 rounded-full flex-shrink-0"
+                    ></span>
+                  </div>
+                  <p class="text-sm text-secondary-600 mt-1">{{ notification.message }}</p>
+                  <p class="text-xs text-secondary-500 mt-1">{{ notification.time }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- No notifications -->
+          <div *ngIf="getNotifications().length === 0" class="px-4 py-8 text-center">
+            <svg class="mx-auto h-12 w-12 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-3.405-3.405A1.994 1.994 0 0117 12V9a5 5 0 10-10 0v3c0 .53-.217 1.04-.595 1.405L3 17h5m8 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+            </svg>
+            <p class="text-sm text-secondary-500 mt-2">No notifications</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- User menu -->
+      <div class="relative">
+        <button
+          type="button"
+          class="flex items-center space-x-3 p-2 rounded-md hover:bg-secondary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+          (click)="toggleUserMenu()"
+          [class.bg-secondary-100]="showUserMenu"
+        >
+          <!-- User avatar -->
+          <div class="h-8 w-8 rounded-full flex items-center justify-center text-white text-sm font-semibold" [class]="getRoleColor()">
+            {{ getUserInitials() }}
+          </div>
+          
+          <!-- User info (desktop only) -->
+          <div class="hidden lg:block text-left">
+            <div class="text-sm font-medium text-secondary-900">{{ currentUser?.name }}</div>
+            <div class="text-xs">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" [class]="getRoleBadgeColor()">
+                {{ getUserRole() }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Dropdown arrow -->
+          <svg class="hidden lg:block h-4 w-4 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+
+        <!-- User dropdown menu -->
+        <div
+          *ngIf="showUserMenu"
+          class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-secondary-200 z-50 animate-fade-in"
+          (click)="$event.stopPropagation()"
+        >
+          <!-- User info (mobile) -->
+          <div class="lg:hidden px-4 py-3 border-b border-secondary-200">
+            <div class="flex items-center space-x-3">
+              <div class="h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-semibold" [class]="getRoleColor()">
+                {{ getUserInitials() }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-secondary-900 truncate">{{ currentUser?.name }}</p>
+                <p class="text-xs text-secondary-600 truncate">{{ currentUser?.employeeCode }}</p>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1" [class]="getRoleBadgeColor()">
+                  {{ getUserRole() }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Menu items -->
+          <div class="py-1">
+            <button
+              type="button"
+              class="w-full flex items-center px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-100 transition-colors"
+              (click)="onProfile()"
+            >
+              <svg class="mr-3 h-4 w-4 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+              Profile
+            </button>
+            
+            <button
+              type="button"
+              class="w-full flex items-center px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-100 transition-colors"
+              (click)="onChangePassword()"
+            >
+              <svg class="mr-3 h-4 w-4 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+              </svg>
+              Change Password
+            </button>
+          </div>
+
+          <div class="border-t border-secondary-200">
+            <button
+              type="button"
+              class="w-full flex items-center px-4 py-2 text-sm text-danger-700 hover:bg-danger-50 transition-colors"
+              (click)="onLogout()"
+            >
+              <svg class="mr-3 h-4 w-4 text-danger-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+              </svg>
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Backdrop for dropdowns (mobile) -->
+<div
+  *ngIf="showUserMenu || showNotifications"
+  class="fixed inset-0 z-30 lg:hidden"
+  (click)="closeDropdowns()"
+></div>

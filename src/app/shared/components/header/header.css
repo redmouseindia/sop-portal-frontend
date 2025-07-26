@@ -1,0 +1,319 @@
+/* Header Component Styles */
+
+/* Header container */
+.header-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* Logo hover effect */
+.logo-container:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+/* Navigation button hover effects */
+.nav-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-button::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: #3b82f6;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.nav-button:hover::before {
+  width: 100%;
+}
+
+/* User avatar animations */
+.user-avatar {
+  transition: all 0.3s ease;
+  box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+}
+
+.user-avatar:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+/* Notification badge animation */
+.notification-badge {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Dropdown animations */
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dropdown slide animations */
+.dropdown-enter {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom notification item hover */
+.notification-item {
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.notification-item:hover {
+  background-color: #f8fafc;
+  border-left-color: #3b82f6;
+  transform: translateX(2px);
+}
+
+/* Unread notification indicator */
+.notification-unread {
+  position: relative;
+}
+
+.notification-unread::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 70%;
+  background: #3b82f6;
+  transform: translateY(-50%);
+  border-radius: 0 2px 2px 0;
+}
+
+/* Menu item hover effects */
+.menu-item {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.menu-item:hover {
+  background: linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.05) 100%);
+}
+
+.menu-item:hover svg {
+  color: #3b82f6;
+  transform: scale(1.1);
+}
+
+/* Logout button special styling */
+.logout-button:hover {
+  background: linear-gradient(90deg, transparent 0%, rgba(239, 68, 68, 0.05) 100%);
+}
+
+.logout-button:hover svg {
+  color: #ef4444;
+  transform: scale(1.1);
+}
+
+/* Mobile menu backdrop */
+.backdrop {
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(2px);
+}
+
+/* Responsive navigation */
+@media (max-width: 768px) {
+  .nav-button {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+  }
+  
+  .dropdown-menu {
+    width: calc(100vw - 2rem);
+    max-width: 20rem;
+  }
+  
+  .notification-dropdown {
+    width: calc(100vw - 2rem);
+    max-width: 24rem;
+  }
+}
+
+/* Focus states for accessibility */
+.focus-visible:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .header-container {
+    border-bottom: 2px solid #000;
+  }
+  
+  .nav-button:hover {
+    background: #000;
+    color: #fff;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .dropdown-enter,
+  .nav-button::before,
+  .user-avatar,
+  .notification-item,
+  .menu-item {
+    animation: none;
+    transition: none;
+  }
+  
+  .notification-badge {
+    animation: none;
+  }
+}
+
+/* Dark mode support (if implemented) */
+@media (prefers-color-scheme: dark) {
+  .header-container {
+    background: rgba(17, 24, 39, 0.95);
+    border-bottom-color: rgba(75, 85, 99, 0.8);
+  }
+  
+  .dropdown-menu,
+  .notification-dropdown {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .menu-item:hover {
+    background: rgba(59, 130, 246, 0.1);
+  }
+}
+
+/* Custom scrollbar for notifications */
+.notifications-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notifications-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.notifications-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.notifications-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Loading state for user info */
+.user-info-loading {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Role-based user avatar styles */
+.avatar-admin {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 0 0 2px #fecaca;
+}
+
+.avatar-manager {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  box-shadow: 0 0 0 2px #fed7aa;
+}
+
+.avatar-employee {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 0 0 2px #bfdbfe;
+}
+
+/* Enhanced button hover states */
+.btn-icon {
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-icon:active {
+  transform: translateY(0);
+}
+
+/* Notification types styling */
+.notification-info {
+  border-left-color: #3b82f6;
+}
+
+.notification-warning {
+  border-left-color: #f59e0b;
+}
+
+.notification-success {
+  border-left-color: #10b981;
+}
+
+.notification-error {
+  border-left-color: #ef4444;
+}
+
+/* Smooth state transitions */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Print styles */
+@media print {
+  header {
+    display: none !important;
+  }
+}
