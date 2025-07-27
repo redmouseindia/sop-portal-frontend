@@ -1,1 +1,510 @@
-<p>client-management works!</p>
+<!-- src/app/features/admin/client-management/client-management.html -->
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Client Management</h1>
+          <p class="mt-1 text-sm text-gray-600">Manage client organizations and their categories</p>
+        </div>
+        <div class="flex items-center space-x-3">
+          <!-- Export Button -->
+          <button
+            type="button"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+            (click)="exportClients()"
+            [disabled]="filteredClients.length === 0"
+          >
+            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-4-4m4 4l4-4m-6 6h8"></path>
+            </svg>
+            Export CSV
+          </button>
+          
+          <!-- Add Client Button -->
+          <button
+            type="button"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+            (click)="openCreateClientModal()"
+          >
+            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Add Client
+          </button>
+        </div>
+      </div>
+
+      <!-- Client Statistics -->
+      <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-4">
+        <div class="bg-blue-50 p-3 rounded-lg">
+          <div class="text-sm font-medium text-blue-800">Total Clients</div>
+          <div class="text-2xl font-bold text-blue-900">{{ getClientStats().total }}</div>
+        </div>
+        <div class="bg-green-50 p-3 rounded-lg">
+          <div class="text-sm font-medium text-green-800">Active</div>
+          <div class="text-2xl font-bold text-green-900">{{ getClientStats().active }}</div>
+        </div>
+        <div class="bg-indigo-50 p-3 rounded-lg">
+          <div class="text-sm font-medium text-indigo-800">ABA Clients</div>
+          <div class="text-2xl font-bold text-indigo-900">{{ getClientStats().byCategory[CLIENT_CATEGORIES.ABA] || 0 }}</div>
+        </div>
+        <div class="bg-purple-50 p-3 rounded-lg">
+          <div class="text-sm font-medium text-purple-800">NON-ABA Clients</div>
+          <div class="text-2xl font-bold text-purple-900">{{ getClientStats().byCategory[CLIENT_CATEGORIES.NON_ABA] || 0 }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="px-6 py-4 bg-gray-50">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 sm:space-x-4">
+        <!-- Search -->
+        <div class="flex-1 min-w-0">
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+            <input
+              type="text"
+              class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              placeholder="Search clients by name or code..."
+              [(ngModel)]="searchTerm"
+              (input)="onSearch()"
+            />
+            <!-- Clear search button -->
+            <button
+              *ngIf="searchTerm"
+              type="button"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center"
+              (click)="searchTerm = ''; onSearch()"
+            >
+              <svg class="h-4 w-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="flex items-center space-x-3">
+          <!-- Category Filter -->
+          <div class="flex items-center space-x-2">
+            <label class="text-sm font-medium text-gray-700 whitespace-nowrap">Category:</label>
+            <select
+              class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+              [(ngModel)]="selectedCategory"
+              (change)="onCategoryFilter()"
+            >
+              <option value="">All Categories</option>
+              <option value="ABA">ABA</option>
+              <option value="NON-ABA">NON-ABA</option>
+            </select>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="flex items-center space-x-2">
+            <label class="text-sm font-medium text-gray-700 whitespace-nowrap">Status:</label>
+            <select
+              class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+              [(ngModel)]="selectedStatus"
+              (change)="onStatusFilter()"
+            >
+              <option value="">All Clients</option>
+              <option value="active">Active</option>
+              <option value="deleted">Deleted</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clients Table -->
+  <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="flex items-center justify-center py-12">
+      <app-loading type="spinner" size="lg" [showText]="true" text="Loading clients..."></app-loading>
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="!isLoading" class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <button
+                type="button"
+                class="group inline-flex items-center space-x-1 hover:text-gray-700"
+                (click)="onSort('clientCode')"
+              >
+                <span>Client Code</span>
+                <span class="text-primary-500">{{ getSortIcon('clientCode') }}</span>
+              </button>
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <button
+                type="button"
+                class="group inline-flex items-center space-x-1 hover:text-gray-700"
+                (click)="onSort('clientName')"
+              >
+                <span>Client Name</span>
+                <span class="text-primary-500">{{ getSortIcon('clientName') }}</span>
+              </button>
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <button
+                type="button"
+                class="group inline-flex items-center space-x-1 hover:text-gray-700"
+                (click)="onSort('category')"
+              >
+                <span>Category</span>
+                <span class="text-primary-500">{{ getSortIcon('category') }}</span>
+              </button>
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deleted By</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deleted At</th>
+            <th scope="col" class="relative px-6 py-3">
+              <span class="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let client of paginatedClients; trackBy: trackByClientId" class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              <div class="flex items-center">
+                <div class="h-8 w-8 rounded-lg flex items-center justify-center text-white text-xs font-semibold mr-3" [class]="getCategoryBadgeColor(client.category)">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getCategoryIcon(client.category)"></path>
+                  </svg>
+                </div>
+                {{ client.clientCode }}
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-medium text-gray-900">{{ client.clientName }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [class]="getCategoryBadgeColor(client.category)">
+                <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getCategoryIcon(client.category)"></path>
+                </svg>
+                {{ client.category }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [class]="getStatusBadgeColor(client.isDeleted)">
+                {{ getStatusText(client.isDeleted) }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+              {{ client.deletedByName || '-' }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ client.deletedAt ? (client.deletedAt | date:'short') : '-' }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <div class="flex items-center justify-end space-x-2">
+                <!-- View Documents Button -->
+                <button
+                  *ngIf="!client.isDeleted"
+                  type="button"
+                  class="text-indigo-600 hover:text-indigo-900 p-1 rounded hover:bg-indigo-50 transition-colors"
+                  (click)="viewClientDocuments(client)"
+                  title="View Documents"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                </button>
+
+                <!-- View Assignments Button -->
+                <button
+                  *ngIf="!client.isDeleted"
+                  type="button"
+                  class="text-yellow-600 hover:text-yellow-900 p-1 rounded hover:bg-yellow-50 transition-colors"
+                  (click)="viewClientAssignments(client)"
+                  title="View Assignments"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
+                  </svg>
+                </button>
+
+                <!-- Edit Button -->
+                <button
+                  *ngIf="!client.isDeleted"
+                  type="button"
+                  class="text-primary-600 hover:text-primary-900 p-1 rounded hover:bg-primary-50 transition-colors"
+                  (click)="editClient(client)"
+                  title="Edit Client"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                  </svg>
+                </button>
+
+                <!-- Delete Button -->
+                <button
+                  *ngIf="!client.isDeleted"
+                  type="button"
+                  class="text-danger-600 hover:text-danger-900 p-1 rounded hover:bg-danger-50 transition-colors"
+                  (click)="deleteClient(client)"
+                  title="Delete Client"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+
+                <!-- Restore Button -->
+                <button
+                  *ngIf="client.isDeleted"
+                  type="button"
+                  class="text-success-600 hover:text-success-900 p-1 rounded hover:bg-success-50 transition-colors"
+                  (click)="restoreClient(client)"
+                  title="Restore Client"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Empty State -->
+          <tr *ngIf="filteredClients.length === 0 && !isLoading">
+            <td colspan="7" class="px-6 py-12 text-center">
+              <div class="text-gray-500">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+                <p class="mt-2 text-sm text-gray-600">No clients found</p>
+                <p class="text-xs text-gray-500">Try adjusting your search or filter criteria</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="!isLoading && filteredClients.length > 0" class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+      <div class="flex-1 flex justify-between sm:hidden">
+        <button
+          [disabled]="currentPage === 1"
+          class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          (click)="previousPage()"
+        >
+          Previous
+        </button>
+        <button
+          [disabled]="currentPage === totalPages"
+          class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          (click)="nextPage()"
+        >
+          Next
+        </button>
+      </div>
+      <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+        <div>
+          <p class="text-sm text-gray-700">
+            Showing
+            <span class="font-medium">{{ getStartIndex() }}</span>
+            to
+            <span class="font-medium">{{ getEndIndex() }}</span>
+            of
+            <span class="font-medium">{{ filteredClients.length }}</span>
+            results
+          </p>
+        </div>
+        <div>
+          <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            <!-- Previous button -->
+            <button
+              [disabled]="currentPage === 1"
+              class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              (click)="previousPage()"
+            >
+              <span class="sr-only">Previous</span>
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </button>
+            
+            <!-- Page numbers -->
+            <button
+              *ngFor="let page of getPageNumbers()"
+              class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
+              [class.bg-primary-50]="page === currentPage"
+              [class.border-primary-500]="page === currentPage"
+              [class.text-primary-600]="page === currentPage"
+              [class.bg-white]="page !== currentPage"
+              [class.border-gray-300]="page !== currentPage"
+              [class.text-gray-500]="page !== currentPage"
+              [class.hover:bg-gray-50]="page !== currentPage"
+              (click)="goToPage(page)"
+            >
+              {{ page }}
+            </button>
+            
+            <!-- Next button -->
+            <button
+              [disabled]="currentPage === totalPages"
+              class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              (click)="nextPage()"
+            >
+              <span class="sr-only">Next</span>
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create/Edit Client Modal -->
+<app-modal
+  [isOpen]="showClientModal"
+  [title]="isEditMode ? 'Edit Client' : 'Create Client'"
+  size="lg"
+  [showFooter]="false"
+  (close)="closeClientModal()"
+>
+  <form [formGroup]="clientForm" (ngSubmit)="onSubmitClient()" class="space-y-6">
+    <!-- Client Code -->
+    <div>
+      <label for="clientCode" class="block text-sm font-medium text-gray-700 mb-2">
+        Client Code *
+      </label>
+      <input
+        id="clientCode"
+        type="text"
+        formControlName="clientCode"
+        [readonly]="isEditMode"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm uppercase"
+        [class.bg-gray-50]="isEditMode"
+        [class.cursor-not-allowed]="isEditMode"
+        [class.border-danger-300]="isFieldInvalid('clientCode')"
+        placeholder="Enter client code (e.g., ABC001)"
+        style="text-transform: uppercase;"
+      />
+      <div *ngIf="isFieldInvalid('clientCode')" class="mt-1 text-sm text-danger-600">
+        {{ getFieldErrorMessage('clientCode') }}
+      </div>
+      <p *ngIf="!isEditMode" class="mt-1 text-xs text-gray-500">
+        Must be alphanumeric characters only. Will be automatically converted to uppercase.
+      </p>
+    </div>
+
+    <!-- Client Name -->
+    <div>
+      <label for="clientName" class="block text-sm font-medium text-gray-700 mb-2">
+        Client Name *
+      </label>
+      <input
+        id="clientName"
+        type="text"
+        formControlName="clientName"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+        [class.border-danger-300]="isFieldInvalid('clientName')"
+        placeholder="Enter client organization name"
+      />
+      <div *ngIf="isFieldInvalid('clientName')" class="mt-1 text-sm text-danger-600">
+        {{ getFieldErrorMessage('clientName') }}
+      </div>
+    </div>
+
+    <!-- Category -->
+    <div>
+      <label for="category" class="block text-sm font-medium text-gray-700 mb-2">
+        Category *
+      </label>
+      <select
+        id="category"
+        formControlName="category"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+        [class.border-danger-300]="isFieldInvalid('category')"
+      >
+        <option value="">Select a category</option>
+        <option *ngFor="let option of categoryOptions" [value]="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+      <div *ngIf="isFieldInvalid('category')" class="mt-1 text-sm text-danger-600">
+        {{ getFieldErrorMessage('category') }}
+      </div>
+      <div class="mt-2 text-xs text-gray-500">
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center">
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              ABA
+            </span>
+            <span class="ml-2">- Applied Behavior Analysis clients</span>
+          </div>
+          <div class="flex items-center">
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+              </svg>
+              NON-ABA
+            </span>
+            <span class="ml-2">- Other client organizations</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+      <button
+        type="button"
+        class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+        (click)="closeClientModal()"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        [disabled]="clientForm.invalid || isSubmitting"
+        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        <span *ngIf="!isSubmitting">{{ isEditMode ? 'Update' : 'Create' }} Client</span>
+        <span *ngIf="isSubmitting" class="flex items-center">
+          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          {{ isEditMode ? 'Updating...' : 'Creating...' }}
+        </span>
+      </button>
+    </div>
+  </form>
+</app-modal>
+
+<!-- Delete Confirmation Dialog -->
+<app-confirm-dialog
+  [isOpen]="showConfirmDialog"
+  title="Delete Client"
+  [message]="clientToDelete ? 'Are you sure you want to delete ' + clientToDelete.clientName + '?' : ''"
+  details="This action will soft-delete the client. The client can be restored later if needed."
+  confirmText="Delete"
+  cancelText="Cancel"
+  type="danger"
+  [showIcon]="true"
+  [warnings]="['Client will be soft-deleted and can be restored later', 'Related documents and effort assignments will remain but be inactive', 'Client code will be available for reuse after deletion']"
+  (confirm)="confirmDeleteClient()"
+  (cancel)="cancelDeleteClient()"
+  (close)="cancelDeleteClient()"
+></app-confirm-dialog>

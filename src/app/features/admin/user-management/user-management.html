@@ -8,16 +8,52 @@
           <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
           <p class="mt-1 text-sm text-gray-600">Manage system users and their roles</p>
         </div>
-        <button
-          type="button"
-          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
-          (click)="openCreateUserModal()"
-        >
-          <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-          </svg>
-          Add User
-        </button>
+        <div class="flex items-center space-x-3">
+          <!-- Export Button -->
+          <button
+            type="button"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+            (click)="exportUsers()"
+            [disabled]="filteredUsers.length === 0"
+          >
+            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-4-4m4 4l4-4m-12 5.5h16v2H0v-2z"></path>
+            </svg>
+            Export CSV
+          </button>
+          
+          <!-- Add User Button -->
+          <button
+            type="button"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+            (click)="openCreateUserModal()"
+          >
+            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Add User
+          </button>
+        </div>
+      </div>
+
+      <!-- User Statistics -->
+      <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-4">
+        <div class="bg-blue-50 p-3 rounded-lg">
+          <div class="text-sm font-medium text-blue-800">Total Users</div>
+          <div class="text-2xl font-bold text-blue-900">{{ getUserStats().total }}</div>
+        </div>
+        <div class="bg-green-50 p-3 rounded-lg">
+          <div class="text-sm font-medium text-green-800">Active</div>
+          <div class="text-2xl font-bold text-green-900">{{ getUserStats().active }}</div>
+        </div>
+        <div class="bg-red-50 p-3 rounded-lg">
+          <div class="text-sm font-medium text-red-800">Deleted</div>
+          <div class="text-2xl font-bold text-red-900">{{ getUserStats().deleted }}</div>
+        </div>
+        <div class="bg-purple-50 p-3 rounded-lg">
+          <div class="text-sm font-medium text-purple-800">Admins</div>
+          <div class="text-2xl font-bold text-purple-900">{{ getUserStats().byRole[USER_ROLES.ADMIN] || 0 }}</div>
+        </div>
       </div>
     </div>
 
@@ -39,36 +75,50 @@
               [(ngModel)]="searchTerm"
               (input)="onSearch()"
             />
+            <!-- Clear search button -->
+            <button
+              *ngIf="searchTerm"
+              type="button"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center"
+              (click)="searchTerm = ''; onSearch()"
+            >
+              <svg class="h-4 w-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
           </div>
         </div>
 
-        <!-- Role Filter -->
-        <div class="flex items-center space-x-2">
-          <label class="text-sm font-medium text-gray-700">Role:</label>
-          <select
-            class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-            [(ngModel)]="selectedRole"
-            (change)="onRoleFilter()"
-          >
-            <option value="">All Roles</option>
-            <option value="Admin">Admin</option>
-            <option value="Manager">Manager</option>
-            <option value="Employee">Employee</option>
-          </select>
-        </div>
+        <!-- Filters -->
+        <div class="flex items-center space-x-3">
+          <!-- Role Filter -->
+          <div class="flex items-center space-x-2">
+            <label class="text-sm font-medium text-gray-700 whitespace-nowrap">Role:</label>
+            <select
+              class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+              [(ngModel)]="selectedRole"
+              (change)="onRoleFilter()"
+            >
+              <option value="">All Roles</option>
+              <option value="Admin">Admin</option>
+              <option value="Manager">Manager</option>
+              <option value="Employee">Employee</option>
+            </select>
+          </div>
 
-        <!-- Status Filter -->
-        <div class="flex items-center space-x-2">
-          <label class="text-sm font-medium text-gray-700">Status:</label>
-          <select
-            class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-            [(ngModel)]="selectedStatus"
-            (change)="onStatusFilter()"
-          >
-            <option value="">All Users</option>
-            <option value="active">Active</option>
-            <option value="deleted">Deleted</option>
-          </select>
+          <!-- Status Filter -->
+          <div class="flex items-center space-x-2">
+            <label class="text-sm font-medium text-gray-700 whitespace-nowrap">Status:</label>
+            <select
+              class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+              [(ngModel)]="selectedStatus"
+              (change)="onStatusFilter()"
+            >
+              <option value="">All Users</option>
+              <option value="active">Active</option>
+              <option value="deleted">Deleted</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
@@ -89,43 +139,58 @@
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               <button
                 type="button"
-                class="group inline-flex items-center space-x-1"
+                class="group inline-flex items-center space-x-1 hover:text-gray-700"
                 (click)="onSort('employeeCode')"
               >
                 <span>Employee Code</span>
-                <svg class="h-4 w-4 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
-                </svg>
+                <span class="text-primary-500">{{ getSortIcon('employeeCode') }}</span>
               </button>
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               <button
                 type="button"
-                class="group inline-flex items-center space-x-1"
+                class="group inline-flex items-center space-x-1 hover:text-gray-700"
                 (click)="onSort('name')"
               >
                 <span>Name</span>
-                <svg class="h-4 w-4 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
-                </svg>
+                <span class="text-primary-500">{{ getSortIcon('name') }}</span>
               </button>
             </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               <button
                 type="button"
-                class="group inline-flex items-center space-x-1"
+                class="group inline-flex items-center space-x-1 hover:text-gray-700"
+                (click)="onSort('email')"
+              >
+                <span>Email</span>
+                <span class="text-primary-500">{{ getSortIcon('email') }}</span>
+              </button>
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <button
+                type="button"
+                class="group inline-flex items-center space-x-1 hover:text-gray-700"
                 (click)="onSort('role')"
               >
                 <span>Role</span>
-                <svg class="h-4 w-4 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
-                </svg>
+                <span class="text-primary-500">{{ getSortIcon('role') }}</span>
               </button>
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manager</th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <button
+                type="button"
+                class="group inline-flex items-center space-x-1 hover:text-gray-700"
+                (click)="onSort('createdAt')"
+              >
+                <span>Created</span>
+                <span class="text-primary-500">{{ getSortIcon('createdAt') }}</span>
+              </button>
+            </th>
+            <th scope="col" class="relative px-6 py-3">
+              <span class="sr-only">Actions</span>
+            </th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
@@ -142,7 +207,9 @@
               </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-              {{ user.email }}
+              <a [href]="'mailto:' + user.email" class="hover:text-primary-600 transition-colors">
+                {{ user.email }}
+              </a>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [class]="getRoleBadgeColor(user.role)">
@@ -153,12 +220,12 @@
               {{ user.managerCode || '-' }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-              <span *ngIf="!user.isDeleted" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800">
-                Active
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [class]="getStatusBadgeColor(user.isDeleted)">
+                {{ getStatusText(user.isDeleted) }}
               </span>
-              <span *ngIf="user.isDeleted" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-danger-100 text-danger-800">
-                Deleted
-              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ user.createdAt ? (user.createdAt | date:'short') : '-' }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
               <div class="flex items-center justify-end space-x-2">
@@ -177,7 +244,7 @@
 
                 <!-- Delete Button -->
                 <button
-                  *ngIf="!user.isDeleted && user.role !== 'Admin'"
+                  *ngIf="!user.isDeleted && user.role !== USER_ROLES.ADMIN"
                   type="button"
                   class="text-danger-600 hover:text-danger-900 p-1 rounded hover:bg-danger-50 transition-colors"
                   (click)="deleteUser(user)"
@@ -200,13 +267,22 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                   </svg>
                 </button>
+
+                <!-- Admin Protection Info -->
+                <span
+                  *ngIf="user.role === USER_ROLES.ADMIN"
+                  class="text-xs text-gray-500 italic"
+                  title="Admin users are protected from deletion"
+                >
+                  Protected
+                </span>
               </div>
             </td>
           </tr>
 
           <!-- Empty State -->
           <tr *ngIf="filteredUsers.length === 0 && !isLoading">
-            <td colspan="7" class="px-6 py-12 text-center">
+            <td colspan="8" class="px-6 py-12 text-center">
               <div class="text-gray-500">
                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
@@ -252,6 +328,7 @@
         </div>
         <div>
           <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            <!-- Previous button -->
             <button
               [disabled]="currentPage === 1"
               class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -263,10 +340,23 @@
               </svg>
             </button>
             
-            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-              Page {{ currentPage }} of {{ totalPages }}
-            </span>
+            <!-- Page numbers -->
+            <button
+              *ngFor="let page of getPageNumbers()"
+              class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
+              [class.bg-primary-50]="page === currentPage"
+              [class.border-primary-500]="page === currentPage"
+              [class.text-primary-600]="page === currentPage"
+              [class.bg-white]="page !== currentPage"
+              [class.border-gray-300]="page !== currentPage"
+              [class.text-gray-500]="page !== currentPage"
+              [class.hover:bg-gray-50]="page !== currentPage"
+              (click)="goToPage(page)"
+            >
+              {{ page }}
+            </button>
             
+            <!-- Next button -->
             <button
               [disabled]="currentPage === totalPages"
               class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -305,12 +395,16 @@
         [readonly]="isEditMode"
         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
         [class.bg-gray-50]="isEditMode"
+        [class.cursor-not-allowed]="isEditMode"
         [class.border-danger-300]="isFieldInvalid('employeeCode')"
-        placeholder="Enter employee code"
+        placeholder="Enter employee code (alphanumeric only)"
       />
       <div *ngIf="isFieldInvalid('employeeCode')" class="mt-1 text-sm text-danger-600">
-        <span *ngIf="userForm.get('employeeCode')?.hasError('required')">Employee code is required</span>
+        {{ getFieldErrorMessage('employeeCode') }}
       </div>
+      <p *ngIf="!isEditMode" class="mt-1 text-xs text-gray-500">
+        Must be alphanumeric characters only (e.g., EMP001, MGR001)
+      </p>
     </div>
 
     <!-- Name -->
@@ -327,7 +421,7 @@
         placeholder="Enter full name"
       />
       <div *ngIf="isFieldInvalid('name')" class="mt-1 text-sm text-danger-600">
-        <span *ngIf="userForm.get('name')?.hasError('required')">Name is required</span>
+        {{ getFieldErrorMessage('name') }}
       </div>
     </div>
 
@@ -345,8 +439,7 @@
         placeholder="Enter email address"
       />
       <div *ngIf="isFieldInvalid('email')" class="mt-1 text-sm text-danger-600">
-        <span *ngIf="userForm.get('email')?.hasError('required')">Email is required</span>
-        <span *ngIf="userForm.get('email')?.hasError('email')">Please enter a valid email address</span>
+        {{ getFieldErrorMessage('email') }}
       </div>
     </div>
 
@@ -367,7 +460,7 @@
         <option value="Employee">Employee</option>
       </select>
       <div *ngIf="isFieldInvalid('role')" class="mt-1 text-sm text-danger-600">
-        <span *ngIf="userForm.get('role')?.hasError('required')">Role is required</span>
+        {{ getFieldErrorMessage('role') }}
       </div>
     </div>
 
@@ -396,11 +489,11 @@
       </label>
       <input
         id="password"
-        type="password"
+        type="text"
         formControlName="password"
         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-        [class.border-danger-300]="isFieldInvalid('password')"
-        placeholder="Leave blank for default password (temp*123)"
+        placeholder="Default: temp*123"
+        readonly
       />
       <p class="mt-1 text-xs text-gray-500">Default password: temp*123 (user can change later)</p>
     </div>
@@ -420,8 +513,30 @@
         class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         <span *ngIf="!isSubmitting">{{ isEditMode ? 'Update' : 'Create' }} User</span>
-        <span *ngIf="isSubmitting">{{ isEditMode ? 'Updating...' : 'Creating...' }}</span>
+        <span *ngIf="isSubmitting" class="flex items-center">
+          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          {{ isEditMode ? 'Updating...' : 'Creating...' }}
+        </span>
       </button>
     </div>
   </form>
 </app-modal>
+
+<!-- Delete Confirmation Dialog -->
+<app-confirm-dialog
+  [isOpen]="showConfirmDialog"
+  title="Delete User"
+  [message]="userToDelete ? 'Are you sure you want to delete ' + userToDelete.name + '?' : ''"
+  details="This action will soft-delete the user. The user can be restored later if needed."
+  confirmText="Delete"
+  cancelText="Cancel"
+  type="danger"
+  [showIcon]="true"
+  [warnings]="['User will be soft-deleted and can be restored later', 'User\'s effort assignments will remain but be inactive']"
+  (confirm)="confirmDeleteUser()"
+  (cancel)="cancelDeleteUser()"
+  (close)="cancelDeleteUser()"
+></app-confirm-dialog>
