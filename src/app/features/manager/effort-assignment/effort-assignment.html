@@ -1,1 +1,1013 @@
-<p>effort-assignment works!</p>
+<!-- src/app/features/manager/effort-assignment/manager-effort-assignment.html -->
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <app-header 
+    title="Effort Assignment Management"
+    [showSidebarToggle]="true"
+    (toggleSidebar)="onToggleSidebar()"
+  ></app-header>
+
+  <div class="flex">
+    <!-- Sidebar -->
+    <app-sidebar 
+      [isOpen]="isSidebarOpen"
+      [role]="'Manager'"
+      (closeSidebar)="onCloseSidebar()"
+    ></app-sidebar>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-64">
+      <div class="p-6">
+        <!-- Page Header -->
+        <div class="mb-6">
+          <h1 class="text-2xl font-bold text-gray-900 mb-2">Effort Assignment Management</h1>
+          <p class="text-gray-600">Assign employees to client-process combinations and manage effort allocations.</p>
+        </div>
+
+        <!-- View Mode Toggle -->
+        <div class="bg-white rounded-lg shadow-sm border mb-6">
+          <div class="p-4">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex space-x-1 bg-gray-100 rounded-lg p-1">
+                <button
+                  type="button"
+                  class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+                  [class.bg-white]="viewMode === 'assignments'"
+                  [class.text-primary-600]="viewMode === 'assignments'"
+                  [class.shadow-sm]="viewMode === 'assignments'"
+                  [class.text-gray-500]="viewMode !== 'assignments'"
+                  (click)="switchViewMode('assignments')"
+                >
+                  <svg class="h-4 w-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                  </svg>
+                  Assignments View
+                </button>
+                <button
+                  type="button"
+                  class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+                  [class.bg-white]="viewMode === 'users'"
+                  [class.text-primary-600]="viewMode === 'users'"
+                  [class.shadow-sm]="viewMode === 'users'"
+                  [class.text-gray-500]="viewMode !== 'users'"
+                  (click)="switchViewMode('users')"
+                >
+                  <svg class="h-4 w-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                  </svg>
+                  Users Overview
+                </button>
+              </div>
+
+              <!-- Quick Stats -->
+              <div class="flex items-center space-x-6 text-sm">
+                <div class="text-center">
+                  <div class="text-lg font-semibold text-gray-900">{{ assignments.length }}</div>
+                  <div class="text-gray-500">Total Assignments</div>
+                </div>
+                <div class="text-center">
+                  <div class="text-lg font-semibold text-gray-900">{{ userEffortSummaries.filter(u => u.isOverAllocated).length }}</div>
+                  <div class="text-gray-500">Over-allocated</div>
+                </div>
+                <div class="text-center">
+                  <div class="text-lg font-semibold text-gray-900">{{ userEffortSummaries.filter(u => u.totalEffort === 0).length }}</div>
+                  <div class="text-gray-500">Unassigned</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <!-- Left side: Search and Filters -->
+              <div class="flex flex-col sm:flex-row gap-4 flex-1" *ngIf="viewMode === 'assignments'">
+                <!-- Search -->
+                <div class="relative">
+                  <input
+                    type="text"
+                    placeholder="Search assignments..."
+                    class="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    [(ngModel)]="filters.searchTerm"
+                    (ngModelChange)="onSearchChange()"
+                  />
+                  <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                </div>
+
+                <!-- User Filter -->
+                <select
+                  class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  [(ngModel)]="filters.userId"
+                  (ngModelChange)="onFilterChange()"
+                >
+                  <option [value]="null">All Users</option>
+                  <option *ngFor="let user of users" [value]="user.id">
+                    {{ user.name }} ({{ user.employeeCode }})
+                  </option>
+                </select>
+
+                <!-- Client Filter -->
+                <select
+                  class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  [(ngModel)]="filters.clientId"
+                  (ngModelChange)="onFilterChange()"
+                >
+                  <option [value]="null">All Clients</option>
+                  <option *ngFor="let client of clients" [value]="client.id">
+                    {{ client.clientName }}
+                  </option>
+                </select>
+
+                <!-- Process Filter -->
+                <select
+                  class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  [(ngModel)]="filters.processId"
+                  (ngModelChange)="onFilterChange()"
+                >
+                  <option [value]="null">All Processes</option>
+                  <option *ngFor="let process of processes" [value]="process.id">
+                    {{ process.processName }}
+                  </option>
+                </select>
+
+                <!-- Clear Filters -->
+                <button
+                  type="button"
+                  class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                  (click)="clearFilters()"
+                >
+                  Clear Filters
+                </button>
+              </div>
+
+              <!-- Right side: Actions -->
+              <div class="flex items-center gap-3">
+                <!-- Bulk Actions -->
+                <div *ngIf="selectedAssignments.size > 0" class="flex items-center gap-2">
+                  <span class="text-sm text-gray-600">{{ selectedAssignments.size }} selected</span>
+                  <button
+                    type="button"
+                    class="px-3 py-2 text-sm text-danger-600 hover:text-danger-800 hover:bg-danger-50 rounded-lg transition-colors"
+                    (click)="bulkDelete()"
+                  >
+                    Delete Selected
+                  </button>
+                </div>
+
+                <!-- Create Assignment -->
+                <button
+                  type="button"
+                  class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                  (click)="openCreateModal()"
+                >
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                  New Assignment
+                </button>
+
+                <!-- View Deleted -->
+                <button
+                  type="button"
+                  class="flex items-center gap-2 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                  (click)="loadDeletedAssignments()"
+                  *ngIf="viewMode === 'assignments'"
+                >
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                  {{ showDeletedAssignments ? 'Hide' : 'View' }} Deleted
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error/Success Messages -->
+        <div *ngIf="error" class="mb-4 p-4 bg-danger-50 border border-danger-200 rounded-lg">
+          <div class="flex items-center">
+            <svg class="h-5 w-5 text-danger-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span class="text-danger-800">{{ error }}</span>
+            <button type="button" class="ml-auto text-danger-400 hover:text-danger-600" (click)="clearMessages()">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="successMessage" class="mb-4 p-4 bg-success-50 border border-success-200 rounded-lg">
+          <div class="flex items-center">
+            <svg class="h-5 w-5 text-success-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span class="text-success-800">{{ successMessage }}</span>
+            <button type="button" class="ml-auto text-success-400 hover:text-success-600" (click)="clearMessages()">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="flex items-center justify-center py-12">
+          <app-loading type="spinner" size="lg" [showText]="true" text="Loading effort assignments..."></app-loading>
+        </div>
+
+        <!-- Assignments View -->
+        <div *ngIf="!isLoading && viewMode === 'assignments'" class="bg-white rounded-lg shadow-sm border overflow-hidden">
+          <!-- Table Header -->
+          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-medium text-gray-900">
+                {{ showDeletedAssignments ? 'Deleted Assignments' : 'Active Assignments' }}
+                <span class="ml-2 text-sm font-normal text-gray-500">
+                  ({{ showDeletedAssignments ? deletedAssignments.length : totalItems }} total)
+                </span>
+              </h3>
+              
+              <div class="flex items-center gap-2">
+                <!-- Items per page -->
+                <select
+                  class="text-sm border border-gray-300 rounded px-2 py-1"
+                  [(ngModel)]="itemsPerPage"
+                  (ngModelChange)="applyFilters()"
+                >
+                  <option value="10">10 per page</option>
+                  <option value="15">15 per page</option>
+                  <option value="25">25 per page</option>
+                  <option value="50">50 per page</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Table Content -->
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <!-- Select All Checkbox -->
+                  <th class="px-6 py-3 text-left" *ngIf="!showDeletedAssignments">
+                    <input
+                      type="checkbox"
+                      class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      [checked]="isAllCurrentPageSelected()"
+                      [indeterminate]="isSomeCurrentPageSelected() && !isAllCurrentPageSelected()"
+                      (change)="toggleAllAssignments()"
+                    />
+                  </th>
+                  
+                  <!-- User -->
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      (click)="sortAssignments('user')">
+                    <div class="flex items-center">
+                      User
+                      <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getSortIcon('user')"></path>
+                      </svg>
+                    </div>
+                  </th>
+                  
+                  <!-- Client -->
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      (click)="sortAssignments('client')">
+                    <div class="flex items-center">
+                      Client
+                      <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getSortIcon('client')"></path>
+                      </svg>
+                    </div>
+                  </th>
+                  
+                  <!-- Process -->
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      (click)="sortAssignments('process')">
+                    <div class="flex items-center">
+                      Process
+                      <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getSortIcon('process')"></path>
+                      </svg>
+                    </div>
+                  </th>
+                  
+                  <!-- Effort Value -->
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      (click)="sortAssignments('effort')">
+                    <div class="flex items-center">
+                      Effort %
+                      <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getSortIcon('effort')"></path>
+                      </svg>
+                    </div>
+                  </th>
+                  
+                  <!-- Assigned By -->
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Assigned By
+                  </th>
+                  
+                  <!-- Assignment Date -->
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      (click)="sortAssignments('date')">
+                    <div class="flex items-center">
+                      Assignment Date
+                      <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getSortIcon('date')"></path>
+                      </svg>
+                    </div>
+                  </th>
+                  
+                  <!-- Actions -->
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              
+              <tbody class="bg-white divide-y divide-gray-200">
+                <!-- Active Assignments -->
+                <tr *ngFor="let assignment of getPaginatedAssignments(); trackBy: trackByAssignmentId" 
+                    class="hover:bg-gray-50 transition-colors"
+                    [class.bg-blue-50]="selectedAssignments.has(assignment.id)"
+                    *ngIf="!showDeletedAssignments">
+                  
+                  <!-- Checkbox -->
+                  <td class="px-6 py-4">
+                    <input
+                      type="checkbox"
+                      class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      [checked]="selectedAssignments.has(assignment.id)"
+                      (change)="toggleAssignmentSelection(assignment.id)"
+                    />
+                  </td>
+                  
+                  <!-- User -->
+                  <td class="px-6 py-4">
+                    <div class="flex items-center">
+                      <div class="h-8 w-8 rounded-full bg-primary-500 flex items-center justify-center text-white text-xs font-medium mr-3">
+                        {{ assignment.userName.split(' ').map(n => n[0]).join('').toUpperCase() }}
+                      </div>
+                      <div>
+                        <div class="text-sm font-medium text-gray-900">{{ assignment.userName }}</div>
+                        <div class="text-xs text-gray-500">{{ assignment.employeeCode }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <!-- Client -->
+                  <td class="px-6 py-4">
+                    <div class="text-sm text-gray-900">{{ assignment.clientName }}</div>
+                  </td>
+                  
+                  <!-- Process -->
+                  <td class="px-6 py-4">
+                    <div class="text-sm text-gray-900">{{ assignment.processName }}</div>
+                  </td>
+                  
+                  <!-- Effort Value -->
+                  <td class="px-6 py-4">
+                    <div class="flex items-center">
+                      <span class="text-sm font-medium" [class]="getEffortColor(assignment.effortValue)">
+                        {{ formatEffortValue(assignment.effortValue) }}
+                      </span>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div 
+                          class="h-2 rounded-full"
+                          [class]="assignment.effortValue > 0.5 ? 'bg-warning-500' : 'bg-primary-500'"
+                          [style.width.%]="assignment.effortValue * 100"
+                        ></div>
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <!-- Assigned By -->
+                  <td class="px-6 py-4">
+                    <div class="text-sm text-gray-900">{{ assignment.assignedByName }}</div>
+                  </td>
+                  
+                  <!-- Assignment Date -->
+                  <td class="px-6 py-4">
+                    <div class="text-sm text-gray-900">{{ formatDate(assignment.createdAt) }}</div>
+                  </td>
+                  
+                  <!-- Actions -->
+                  <td class="px-6 py-4 text-right">
+                    <div class="flex items-center justify-end gap-2">
+                      <!-- Edit -->
+                      <button
+                        type="button"
+                        class="text-primary-600 hover:text-primary-800 p-1 rounded hover:bg-primary-50 transition-colors"
+                        (click)="openEditModal(assignment)"
+                        title="Edit Assignment"
+                      >
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                      </button>
+                      
+                      <!-- Delete -->
+                      <button
+                        type="button"
+                        class="text-danger-600 hover:text-danger-800 p-1 rounded hover:bg-danger-50 transition-colors"
+                        (click)="confirmDelete(assignment)"
+                        title="Delete Assignment"
+                      >
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                
+                <!-- Deleted Assignments -->
+                <tr *ngFor="let assignment of deletedAssignments; trackBy: trackByAssignmentId" 
+                    class="hover:bg-gray-50 transition-colors bg-red-50"
+                    *ngIf="showDeletedAssignments">
+                  
+                  <!-- Empty checkbox cell -->
+                  <td class="px-6 py-4"></td>
+                  
+                  <!-- User -->
+                  <td class="px-6 py-4">
+                    <div class="flex items-center">
+                      <div class="h-8 w-8 rounded-full bg-gray-400 flex items-center justify-center text-white text-xs font-medium mr-3">
+                        {{ assignment.userName.split(' ').map(n => n[0]).join('').toUpperCase() }}
+                      </div>
+                      <div>
+                        <div class="text-sm font-medium text-gray-500 line-through">{{ assignment.userName }}</div>
+                        <div class="text-xs text-gray-400">{{ assignment.employeeCode }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <!-- Client -->
+                  <td class="px-6 py-4">
+                    <div class="text-sm text-gray-500">{{ assignment.clientName }}</div>
+                  </td>
+                  
+                  <!-- Process -->
+                  <td class="px-6 py-4">
+                    <div class="text-sm text-gray-500">{{ assignment.processName }}</div>
+                  </td>
+                  
+                  <!-- Effort Value -->
+                  <td class="px-6 py-4">
+                    <span class="text-sm text-gray-500">{{ formatEffortValue(assignment.effortValue) }}</span>
+                  </td>
+                  
+                  <!-- Assigned By -->
+                  <td class="px-6 py-4">
+                    <div class="text-sm text-gray-500">{{ assignment.assignedByName }}</div>
+                  </td>
+                  
+                  <!-- Deleted Date -->
+                  <td class="px-6 py-4">
+                    <div class="text-sm text-gray-500">
+                      Deleted: {{ formatDate(assignment.deletedAt!) }}
+                    </div>
+                  </td>
+                  
+                  <!-- Actions -->
+                  <td class="px-6 py-4 text-right">
+                    <button
+                      type="button"
+                      class="text-success-600 hover:text-success-800 px-3 py-1 text-sm rounded hover:bg-success-50 transition-colors"
+                      (click)="confirmRestore(assignment)"
+                    >
+                      Restore
+                    </button>
+                  </td>
+                </tr>
+                
+                <!-- Empty State -->
+                <tr *ngIf="!showDeletedAssignments && getPaginatedAssignments().length === 0">
+                  <td colspan="8" class="px-6 py-12 text-center">
+                    <div class="flex flex-col items-center">
+                      <svg class="h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                      </svg>
+                      <h3 class="text-lg font-medium text-gray-900 mb-2">No assignments found</h3>
+                      <p class="text-gray-500 mb-4">Get started by creating your first effort assignment.</p>
+                      <button
+                        type="button"
+                        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                        (click)="openCreateModal()"
+                      >
+                        Create Assignment
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div *ngIf="!showDeletedAssignments && totalPages > 1" class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+            <div class="flex items-center justify-between">
+              <div class="text-sm text-gray-700">
+                Showing {{ getPageInfo() }} assignments
+              </div>
+              
+              <div class="flex items-center gap-2">
+                <!-- Previous Button -->
+                <button
+                  type="button"
+                  class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  [disabled]="currentPage === 1"
+                  (click)="previousPage()"
+                >
+                  Previous
+                </button>
+                
+                <!-- Page Numbers -->
+                <button
+                  *ngFor="let page of [].constructor(totalPages); let i = index"
+                  type="button"
+                  class="px-3 py-1 text-sm border rounded transition-colors"
+                  [class.bg-primary-600]="currentPage === i + 1"
+                  [class.text-white]="currentPage === i + 1"
+                  [class.border-primary-600]="currentPage === i + 1"
+                  [class.border-gray-300]="currentPage !== i + 1"
+                  [class.hover:bg-gray-100]="currentPage !== i + 1"
+                  (click)="goToPage(i + 1)"
+                >
+                  {{ i + 1 }}
+                </button>
+                
+                <!-- Next Button -->
+                <button
+                  type="button"
+                  class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  [disabled]="currentPage === totalPages"
+                  (click)="nextPage()"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Users Overview -->
+        <div *ngIf="!isLoading && viewMode === 'users'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div *ngFor="let userSummary of userEffortSummaries; trackBy: trackByUserId" 
+               class="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow cursor-pointer"
+               (click)="viewUserDetails(userSummary)">
+            
+            <!-- User Header -->
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center">
+                <div class="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center text-white text-sm font-medium mr-3">
+                  {{ userSummary.userName.split(' ').map(n => n[0]).join('').toUpperCase() }}
+                </div>
+                <div>
+                  <h3 class="text-sm font-medium text-gray-900">{{ userSummary.userName }}</h3>
+                  <p class="text-xs text-gray-500">{{ userSummary.employeeCode }}</p>
+                </div>
+              </div>
+              
+              <!-- Over-allocated indicator -->
+              <div *ngIf="userSummary.isOverAllocated" 
+                   class="px-2 py-1 bg-danger-100 text-danger-800 text-xs rounded-full font-medium">
+                Over-allocated
+              </div>
+            </div>
+
+            <!-- Effort Progress -->
+            <div class="mb-4">
+              <div class="flex justify-between text-sm mb-1">
+                <span class="text-gray-600">Total Effort</span>
+                <span class="font-medium" [class]="userSummary.isOverAllocated ? 'text-danger-600' : 'text-gray-900'">
+                  {{ formatEffortValue(userSummary.totalEffort) }}
+                </span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  class="h-2 rounded-full transition-all duration-300"
+                  [class]="userSummary.isOverAllocated ? 'bg-danger-500' : (userSummary.totalEffort > 0.7 ? 'bg-warning-500' : 'bg-primary-500')"
+                  [style.width.%]="Math.min(userSummary.totalEffort * 100, 100)"
+                ></div>
+              </div>
+            </div>
+
+            <!-- Assignment Count -->
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-600">{{ userSummary.assignments.length }} assignment(s)</span>
+              <span class="text-gray-600">
+                {{ formatEffortValue(userSummary.remainingCapacity) }} remaining
+              </span>
+            </div>
+
+            <!-- Assignment List Preview -->
+            <div *ngIf="userSummary.assignments.length > 0" class="mt-3 pt-3 border-t border-gray-100">
+              <div class="space-y-1">
+                <div *ngFor="let assignment of userSummary.assignments.slice(0, 3)" 
+                     class="flex justify-between text-xs">
+                  <span class="text-gray-600 truncate">{{ assignment.clientName }} - {{ assignment.processName }}</span>
+                  <span class="text-gray-900 font-medium">{{ formatEffortValue(assignment.effortValue) }}</span>
+                </div>
+                <div *ngIf="userSummary.assignments.length > 3" class="text-xs text-gray-500">
+                  +{{ userSummary.assignments.length - 3 }} more...
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Create Assignment Modal -->
+  <app-modal
+    [isOpen]="showCreateModal"
+    title="Create New Assignment"
+    size="lg"
+    [showHeader]="true"
+    [showFooter]="true"
+    [showCancelButton]="true"
+    [showConfirmButton]="true"
+    cancelButtonText="Cancel"
+    confirmButtonText="Create Assignment"
+    [confirmButtonDisabled]="!newAssignmentForm.isValid"
+    (close)="closeCreateModal()"
+    (cancel)="closeCreateModal()"
+    (confirm)="createAssignment()"
+  >
+    <div class="space-y-6">
+      <!-- Form Validation Errors -->
+      <div *ngIf="newAssignmentForm.errors.length > 0" class="p-4 bg-danger-50 border border-danger-200 rounded-lg">
+        <h4 class="text-sm font-medium text-danger-800 mb-2">Please fix the following errors:</h4>
+        <ul class="text-sm text-danger-700 space-y-1">
+          <li *ngFor="let error of newAssignmentForm.errors" class="flex items-start">
+            <svg class="h-4 w-4 text-danger-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            {{ error }}
+          </li>
+        </ul>
+      </div>
+
+      <!-- User Selection -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          User <span class="text-danger-500">*</span>
+        </label>
+        <select
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          [(ngModel)]="newAssignmentForm.userId"
+          (ngModelChange)="onCreateFormChange()"
+        >
+          <option [value]="null">Select a user</option>
+          <option *ngFor="let user of users" [value]="user.id">
+            {{ user.name }} ({{ user.employeeCode }}) - {{ formatEffortValue(getUserRemainingCapacity(user.id)) }} remaining
+          </option>
+        </select>
+      </div>
+
+      <!-- Client Selection -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Client <span class="text-danger-500">*</span>
+        </label>
+        <select
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          [(ngModel)]="newAssignmentForm.clientId"
+          (ngModelChange)="onCreateFormChange()"
+        >
+          <option [value]="null">Select a client</option>
+          <option *ngFor="let client of clients" [value]="client.id">
+            {{ client.clientCode }} - {{ client.clientName }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Process Selection -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Process <span class="text-danger-500">*</span>
+        </label>
+        <select
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          [(ngModel)]="newAssignmentForm.processId"
+          (ngModelChange)="onCreateFormChange()"
+        >
+          <option [value]="null">Select a process</option>
+          <option *ngFor="let process of processes" [value]="process.id">
+            {{ process.processCode }} - {{ process.processName }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Effort Value -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Effort Value <span class="text-danger-500">*</span>
+        </label>
+        <div class="flex items-center space-x-4">
+          <div class="flex-1">
+            <input
+              type="range"
+              min="0.01"
+              max="1.0"
+              step="0.01"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              [(ngModel)]="newAssignmentForm.effortValue"
+              (ngModelChange)="onCreateFormChange()"
+            />
+            <div class="flex justify-between text-xs text-gray-500 mt-1">
+              <span>1%</span>
+              <span>25%</span>
+              <span>50%</span>
+              <span>75%</span>
+              <span>100%</span>
+            </div>
+          </div>
+          <div class="w-20">
+            <input
+              type="number"
+              min="0.01"
+              max="1.0"
+              step="0.01"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-center"
+              [(ngModel)]="newAssignmentForm.effortValue"
+              (ngModelChange)="onCreateFormChange()"
+            />
+          </div>
+          <div class="w-16 text-right font-medium text-gray-900">
+            {{ formatEffortValue(newAssignmentForm.effortValue) }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Assignment Summary -->
+      <div *ngIf="newAssignmentForm.userId && newAssignmentForm.clientId && newAssignmentForm.processId" 
+           class="bg-gray-50 rounded-lg p-4">
+        <h4 class="text-sm font-medium text-gray-900 mb-3">Assignment Summary</h4>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between">
+            <span class="text-gray-600">User:</span>
+            <span class="text-gray-900">{{ getSelectedUserName() }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Client:</span>
+            <span class="text-gray-900">{{ getSelectedClientName() }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Process:</span>
+            <span class="text-gray-900">{{ getSelectedProcessName() }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Effort:</span>
+            <span class="text-gray-900 font-medium">{{ formatEffortValue(newAssignmentForm.effortValue) }}</span>
+          </div>
+          <div class="flex justify-between border-t border-gray-200 pt-2">
+            <span class="text-gray-600">Remaining Capacity:</span>
+            <span class="text-gray-900 font-medium">
+              {{ formatEffortValue(getUserRemainingCapacity(newAssignmentForm.userId!) - newAssignmentForm.effortValue) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </app-modal>
+
+  <!-- Edit Assignment Modal -->
+  <app-modal
+    [isOpen]="showEditModal"
+    title="Edit Assignment"
+    size="md"
+    [showHeader]="true"
+    [showFooter]="true"
+    [showCancelButton]="true"
+    [showConfirmButton]="true"
+    cancelButtonText="Cancel"
+    confirmButtonText="Update Assignment"
+    [confirmButtonDisabled]="!editAssignmentForm.isValid"
+    (close)="closeEditModal()"
+    (cancel)="closeEditModal()"
+    (confirm)="updateAssignment()"
+  >
+    <div class="space-y-6" *ngIf="editAssignmentForm.assignment">
+      <!-- Form Validation Errors -->
+      <div *ngIf="editAssignmentForm.errors.length > 0" class="p-4 bg-danger-50 border border-danger-200 rounded-lg">
+        <h4 class="text-sm font-medium text-danger-800 mb-2">Please fix the following errors:</h4>
+        <ul class="text-sm text-danger-700 space-y-1">
+          <li *ngFor="let error of editAssignmentForm.errors" class="flex items-start">
+            <svg class="h-4 w-4 text-danger-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            {{ error }}
+          </li>
+        </ul>
+      </div>
+
+      <!-- Assignment Details -->
+      <div class="bg-gray-50 rounded-lg p-4">
+        <h4 class="text-sm font-medium text-gray-900 mb-3">Assignment Details</h4>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between">
+            <span class="text-gray-600">User:</span>
+            <span class="text-gray-900">{{ editAssignmentForm.assignment.userName }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Client:</span>
+            <span class="text-gray-900">{{ editAssignmentForm.assignment.clientName }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Process:</span>
+            <span class="text-gray-900">{{ editAssignmentForm.assignment.processName }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Effort Value -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Effort Value <span class="text-danger-500">*</span>
+        </label>
+        <div class="flex items-center space-x-4">
+          <div class="flex-1">
+            <input
+              type="range"
+              min="0.01"
+              max="1.0"
+              step="0.01"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              [(ngModel)]="editAssignmentForm.effortValue"
+              (ngModelChange)="onEditFormChange()"
+            />
+            <div class="flex justify-between text-xs text-gray-500 mt-1">
+              <span>1%</span>
+              <span>25%</span>
+              <span>50%</span>
+              <span>75%</span>
+              <span>100%</span>
+            </div>
+          </div>
+          <div class="w-20">
+            <input
+              type="number"
+              min="0.01"
+              max="1.0"
+              step="0.01"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-center"
+              [(ngModel)]="editAssignmentForm.effortValue"
+              (ngModelChange)="onEditFormChange()"
+            />
+          </div>
+          <div class="w-16 text-right font-medium text-gray-900">
+            {{ formatEffortValue(editAssignmentForm.effortValue) }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Change Summary -->
+      <div class="bg-blue-50 rounded-lg p-4">
+        <h4 class="text-sm font-medium text-blue-900 mb-3">Change Summary</h4>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between">
+            <span class="text-blue-700">Current Effort:</span>
+            <span class="text-blue-900 font-medium">{{ formatEffortValue(editAssignmentForm.assignment.effortValue) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-blue-700">New Effort:</span>
+            <span class="text-blue-900 font-medium">{{ formatEffortValue(editAssignmentForm.effortValue) }}</span>
+          </div>
+          <div class="flex justify-between border-t border-blue-200 pt-2">
+            <span class="text-blue-700">Change:</span>
+            <span class="text-blue-900 font-medium">
+              {{ editAssignmentForm.effortValue > editAssignmentForm.assignment.effortValue ? '+' : '' }}{{ formatEffortValue(editAssignmentForm.effortValue - editAssignmentForm.assignment.effortValue) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </app-modal>
+
+  <!-- User Details Modal -->
+  <app-modal
+    [isOpen]="showUserDetailModal"
+    [title]="'User Details: ' + (selectedUser?.userName || '')"
+    size="lg"
+    [showHeader]="true"
+    [showFooter]="false"
+    [showCloseButton]="true"
+    (close)="closeUserDetailModal()"
+  >
+    <div class="space-y-6" *ngIf="selectedUser">
+      <!-- User Summary -->
+      <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div class="flex items-center">
+          <div class="h-12 w-12 rounded-full bg-primary-500 flex items-center justify-center text-white text-lg font-medium mr-4">
+            {{ selectedUser.userName.split(' ').map(n => n[0]).join('').toUpperCase() }}
+          </div>
+          <div>
+            <h3 class="text-lg font-medium text-gray-900">{{ selectedUser.userName }}</h3>
+            <p class="text-sm text-gray-500">{{ selectedUser.employeeCode }}</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-lg font-semibold" [class]="selectedUser.isOverAllocated ? 'text-danger-600' : 'text-gray-900'">
+            {{ formatEffortValue(selectedUser.totalEffort) }}
+          </div>
+          <div class="text-sm text-gray-500">Total Effort</div>
+        </div>
+      </div>
+
+      <!-- Effort Progress -->
+      <div>
+        <div class="flex justify-between text-sm mb-2">
+          <span class="text-gray-600">Effort Allocation</span>
+          <span class="text-gray-900">{{ formatEffortValue(selectedUser.remainingCapacity) }} remaining</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-3">
+          <div 
+            class="h-3 rounded-full transition-all duration-300"
+            [class]="selectedUser.isOverAllocated ? 'bg-danger-500' : (selectedUser.totalEffort > 0.7 ? 'bg-warning-500' : 'bg-primary-500')"
+            [style.width.%]="Math.min(selectedUser.totalEffort * 100, 100)"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Assignment Details -->
+      <div>
+        <h4 class="text-lg font-medium text-gray-900 mb-4">Assignment Details</h4>
+        <div class="space-y-3">
+          <div *ngFor="let assignment of selectedUser.assignments" 
+               class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+            <div class="flex-1">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h5 class="text-sm font-medium text-gray-900">{{ assignment.clientName }}</h5>
+                  <p class="text-xs text-gray-500">{{ assignment.processName }}</p>
+                </div>
+                <div class="text-right">
+                  <div class="text-sm font-medium" [class]="getEffortColor(assignment.effortValue)">
+                    {{ formatEffortValue(assignment.effortValue) }}
+                  </div>
+                  <div class="text-xs text-gray-500">{{ formatDate(assignment.createdAt) }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="ml-4 flex items-center gap-2">
+              <button
+                type="button"
+                class="text-primary-600 hover:text-primary-800 p-1 rounded hover:bg-primary-50"
+                (click)="openEditModal(assignment); closeUserDetailModal()"
+                title="Edit Assignment"
+              >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- No assignments message -->
+        <div *ngIf="selectedUser.assignments.length === 0" class="text-center py-6">
+          <svg class="h-12 w-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+          </svg>
+          <p class="text-gray-500">No assignments found for this user.</p>
+        </div>
+      </div>
+    </div>
+  </app-modal>
+
+  <!-- Delete Confirmation Dialog -->
+  <app-confirm-dialog
+    [isOpen]="showDeleteConfirm"
+    title="Delete Assignment"
+    [message]="'Are you sure you want to delete the assignment for \"' + (selectedAssignment?.userName || '') + '\" on client \"' + (selectedAssignment?.clientName || '') + '\"?'"
+    details="This action will remove the effort assignment and free up the allocated capacity for the user."
+    confirmText="Delete"
+    cancelText="Cancel"
+    type="danger"
+    [showIcon]="true"
+    (confirm)="deleteAssignment()"
+    (cancel)="showDeleteConfirm = false; selectedAssignment = null"
+    (close)="showDeleteConfirm = false; selectedAssignment = null"
+  ></app-confirm-dialog>
+
+  <!-- Restore Confirmation Dialog -->
+  <app-confirm-dialog
+    [isOpen]="showRestoreConfirm"
+    title="Restore Assignment"
+    [message]="'Are you sure you want to restore the assignment for \"' + (selectedAssignment?.userName || '') + '\" on client \"' + (selectedAssignment?.clientName || '') + '\"?'"
+    details="This action will restore the effort assignment and allocate the capacity back to the user."
+    confirmText="Restore"
+    cancelText="Cancel"
+    type="success"
+    [showIcon]="true"
+    (confirm)="restoreAssignment()"
+    (cancel)="showRestoreConfirm = false; selectedAssignment = null"
+    (close)="showRestoreConfirm = false; selectedAssignment = null"
+  ></app-confirm-dialog>
+</div>
