@@ -1,1 +1,427 @@
-<p>user-management works!</p>
+<!-- src/app/features/admin/user-management/user-management.html -->
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
+          <p class="mt-1 text-sm text-gray-600">Manage system users and their roles</p>
+        </div>
+        <button
+          type="button"
+          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+          (click)="openCreateUserModal()"
+        >
+          <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+          Add User
+        </button>
+      </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="px-6 py-4 bg-gray-50">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 sm:space-x-4">
+        <!-- Search -->
+        <div class="flex-1 min-w-0">
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+            <input
+              type="text"
+              class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              placeholder="Search users by name, email, or employee code..."
+              [(ngModel)]="searchTerm"
+              (input)="onSearch()"
+            />
+          </div>
+        </div>
+
+        <!-- Role Filter -->
+        <div class="flex items-center space-x-2">
+          <label class="text-sm font-medium text-gray-700">Role:</label>
+          <select
+            class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            [(ngModel)]="selectedRole"
+            (change)="onRoleFilter()"
+          >
+            <option value="">All Roles</option>
+            <option value="Admin">Admin</option>
+            <option value="Manager">Manager</option>
+            <option value="Employee">Employee</option>
+          </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="flex items-center space-x-2">
+          <label class="text-sm font-medium text-gray-700">Status:</label>
+          <select
+            class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            [(ngModel)]="selectedStatus"
+            (change)="onStatusFilter()"
+          >
+            <option value="">All Users</option>
+            <option value="active">Active</option>
+            <option value="deleted">Deleted</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="flex items-center justify-center py-12">
+      <app-loading type="spinner" size="lg" [showText]="true" text="Loading users..."></app-loading>
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="!isLoading" class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <button
+                type="button"
+                class="group inline-flex items-center space-x-1"
+                (click)="onSort('employeeCode')"
+              >
+                <span>Employee Code</span>
+                <svg class="h-4 w-4 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
+                </svg>
+              </button>
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <button
+                type="button"
+                class="group inline-flex items-center space-x-1"
+                (click)="onSort('name')"
+              >
+                <span>Name</span>
+                <svg class="h-4 w-4 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
+                </svg>
+              </button>
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <button
+                type="button"
+                class="group inline-flex items-center space-x-1"
+                (click)="onSort('role')"
+              >
+                <span>Role</span>
+                <svg class="h-4 w-4 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
+                </svg>
+              </button>
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manager</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let user of paginatedUsers; trackBy: trackByUserId" class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              {{ user.employeeCode }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <div class="h-8 w-8 rounded-full flex items-center justify-center text-white text-sm font-semibold mr-3" [class]="getRoleColor(user.role)">
+                  {{ getUserInitials(user.name) }}
+                </div>
+                <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+              {{ user.email }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [class]="getRoleBadgeColor(user.role)">
+                {{ user.role }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+              {{ user.managerCode || '-' }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span *ngIf="!user.isDeleted" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800">
+                Active
+              </span>
+              <span *ngIf="user.isDeleted" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-danger-100 text-danger-800">
+                Deleted
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <div class="flex items-center justify-end space-x-2">
+                <!-- Edit Button -->
+                <button
+                  *ngIf="!user.isDeleted"
+                  type="button"
+                  class="text-primary-600 hover:text-primary-900 p-1 rounded hover:bg-primary-50 transition-colors"
+                  (click)="editUser(user)"
+                  title="Edit User"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                  </svg>
+                </button>
+
+                <!-- Delete Button -->
+                <button
+                  *ngIf="!user.isDeleted && user.role !== 'Admin'"
+                  type="button"
+                  class="text-danger-600 hover:text-danger-900 p-1 rounded hover:bg-danger-50 transition-colors"
+                  (click)="deleteUser(user)"
+                  title="Delete User"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+
+                <!-- Restore Button -->
+                <button
+                  *ngIf="user.isDeleted"
+                  type="button"
+                  class="text-success-600 hover:text-success-900 p-1 rounded hover:bg-success-50 transition-colors"
+                  (click)="restoreUser(user)"
+                  title="Restore User"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Empty State -->
+          <tr *ngIf="filteredUsers.length === 0 && !isLoading">
+            <td colspan="7" class="px-6 py-12 text-center">
+              <div class="text-gray-500">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                </svg>
+                <p class="mt-2 text-sm text-gray-600">No users found</p>
+                <p class="text-xs text-gray-500">Try adjusting your search or filter criteria</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="!isLoading && filteredUsers.length > 0" class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+      <div class="flex-1 flex justify-between sm:hidden">
+        <button
+          [disabled]="currentPage === 1"
+          class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          (click)="previousPage()"
+        >
+          Previous
+        </button>
+        <button
+          [disabled]="currentPage === totalPages"
+          class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          (click)="nextPage()"
+        >
+          Next
+        </button>
+      </div>
+      <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+        <div>
+          <p class="text-sm text-gray-700">
+            Showing
+            <span class="font-medium">{{ getStartIndex() }}</span>
+            to
+            <span class="font-medium">{{ getEndIndex() }}</span>
+            of
+            <span class="font-medium">{{ filteredUsers.length }}</span>
+            results
+          </p>
+        </div>
+        <div>
+          <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            <button
+              [disabled]="currentPage === 1"
+              class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              (click)="previousPage()"
+            >
+              <span class="sr-only">Previous</span>
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </button>
+            
+            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+              Page {{ currentPage }} of {{ totalPages }}
+            </span>
+            
+            <button
+              [disabled]="currentPage === totalPages"
+              class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              (click)="nextPage()"
+            >
+              <span class="sr-only">Next</span>
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create/Edit User Modal -->
+<app-modal
+  [isOpen]="showUserModal"
+  [title]="isEditMode ? 'Edit User' : 'Create User'"
+  size="lg"
+  [showFooter]="false"
+  (close)="closeUserModal()"
+>
+  <form [formGroup]="userForm" (ngSubmit)="onSubmitUser()" class="space-y-6">
+    <!-- Employee Code -->
+    <div>
+      <label for="employeeCode" class="block text-sm font-medium text-gray-700 mb-2">
+        Employee Code *
+      </label>
+      <input
+        id="employeeCode"
+        type="text"
+        formControlName="employeeCode"
+        [readonly]="isEditMode"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+        [class.bg-gray-50]="isEditMode"
+        [class.border-danger-300]="isFieldInvalid('employeeCode')"
+        placeholder="Enter employee code"
+      />
+      <div *ngIf="isFieldInvalid('employeeCode')" class="mt-1 text-sm text-danger-600">
+        <span *ngIf="userForm.get('employeeCode')?.hasError('required')">Employee code is required</span>
+      </div>
+    </div>
+
+    <!-- Name -->
+    <div>
+      <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+        Full Name *
+      </label>
+      <input
+        id="name"
+        type="text"
+        formControlName="name"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+        [class.border-danger-300]="isFieldInvalid('name')"
+        placeholder="Enter full name"
+      />
+      <div *ngIf="isFieldInvalid('name')" class="mt-1 text-sm text-danger-600">
+        <span *ngIf="userForm.get('name')?.hasError('required')">Name is required</span>
+      </div>
+    </div>
+
+    <!-- Email -->
+    <div>
+      <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+        Email Address *
+      </label>
+      <input
+        id="email"
+        type="email"
+        formControlName="email"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+        [class.border-danger-300]="isFieldInvalid('email')"
+        placeholder="Enter email address"
+      />
+      <div *ngIf="isFieldInvalid('email')" class="mt-1 text-sm text-danger-600">
+        <span *ngIf="userForm.get('email')?.hasError('required')">Email is required</span>
+        <span *ngIf="userForm.get('email')?.hasError('email')">Please enter a valid email address</span>
+      </div>
+    </div>
+
+    <!-- Role -->
+    <div>
+      <label for="role" class="block text-sm font-medium text-gray-700 mb-2">
+        Role *
+      </label>
+      <select
+        id="role"
+        formControlName="role"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+        [class.border-danger-300]="isFieldInvalid('role')"
+      >
+        <option value="">Select a role</option>
+        <option value="Admin">Admin</option>
+        <option value="Manager">Manager</option>
+        <option value="Employee">Employee</option>
+      </select>
+      <div *ngIf="isFieldInvalid('role')" class="mt-1 text-sm text-danger-600">
+        <span *ngIf="userForm.get('role')?.hasError('required')">Role is required</span>
+      </div>
+    </div>
+
+    <!-- Manager Code -->
+    <div>
+      <label for="managerCode" class="block text-sm font-medium text-gray-700 mb-2">
+        Manager Code
+      </label>
+      <select
+        id="managerCode"
+        formControlName="managerCode"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+      >
+        <option value="">No Manager</option>
+        <option *ngFor="let manager of availableManagers" [value]="manager.employeeCode">
+          {{ manager.employeeCode }} - {{ manager.name }}
+        </option>
+      </select>
+      <p class="mt-1 text-xs text-gray-500">Optional: Select a manager for this user</p>
+    </div>
+
+    <!-- Password (Create mode only) -->
+    <div *ngIf="!isEditMode">
+      <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+        Password
+      </label>
+      <input
+        id="password"
+        type="password"
+        formControlName="password"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+        [class.border-danger-300]="isFieldInvalid('password')"
+        placeholder="Leave blank for default password (temp*123)"
+      />
+      <p class="mt-1 text-xs text-gray-500">Default password: temp*123 (user can change later)</p>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+      <button
+        type="button"
+        class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+        (click)="closeUserModal()"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        [disabled]="userForm.invalid || isSubmitting"
+        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        <span *ngIf="!isSubmitting">{{ isEditMode ? 'Update' : 'Create' }} User</span>
+        <span *ngIf="isSubmitting">{{ isEditMode ? 'Updating...' : 'Creating...' }}</span>
+      </button>
+    </div>
+  </form>
+</app-modal>
