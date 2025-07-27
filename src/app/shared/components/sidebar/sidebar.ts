@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth';
-import { NavigationItem, USER_ROLES } from '../../../core/models/index';
+import { NavigationItem, UserRole } from '../../../core/models/index';
 
 @Component({
   selector: 'app-sidebar',
@@ -20,8 +20,9 @@ export class Sidebar implements OnInit {
 
   currentRoute = '';
   navigationItems: NavigationItem[] = [];
+  isDevelopment = true; // Set to false in production
 
-  readonly USER_ROLES = USER_ROLES;
+  readonly USER_ROLES = UserRole;
 
   constructor(
     private router: Router,
@@ -48,13 +49,13 @@ export class Sidebar implements OnInit {
     if (!user) return;
 
     switch (user.role) {
-      case USER_ROLES.ADMIN:
+      case UserRole.Admin:
         this.navigationItems = this.getAdminNavigation();
         break;
-      case USER_ROLES.MANAGER:
+      case UserRole.Manager:
         this.navigationItems = this.getManagerNavigation();
         break;
-      case USER_ROLES.EMPLOYEE:
+      case UserRole.Employee:
         this.navigationItems = this.getEmployeeNavigation();
         break;
       default:
@@ -68,49 +69,49 @@ export class Sidebar implements OnInit {
         label: 'Dashboard',
         route: '/admin',
         icon: 'home',
-        roles: ['Admin']
+        roles: [UserRole.Admin]
       },
       {
         label: 'User Management',
         route: '/admin/users',
         icon: 'users',
-        roles: ['Admin']
+        roles: [USER_ROLES.ADMIN]
       },
       {
         label: 'Client Management',
         route: '/admin/clients',
         icon: 'office-building',
-        roles: ['Admin']
+        roles: [USER_ROLES.ADMIN]
       },
       {
         label: 'Process Management',
         route: '/admin/processes',
         icon: 'cog',
-        roles: ['Admin']
+        roles: [USER_ROLES.ADMIN]
       },
       {
         label: 'Document Management',
         route: '/admin/documents',
         icon: 'document',
-        roles: ['Admin']
+        roles: [USER_ROLES.ADMIN]
       },
       {
         label: 'HR Import',
         route: '/admin/hr-import',
         icon: 'upload',
-        roles: ['Admin']
+        roles: [USER_ROLES.ADMIN]
       },
       {
         label: 'Reports',
         route: '/admin/reports',
         icon: 'chart-bar',
-        roles: ['Admin']
+        roles: [USER_ROLES.ADMIN]
       },
       {
         label: 'Recycle Bin',
         route: '/admin/recycle-bin',
         icon: 'trash',
-        roles: ['Admin']
+        roles: [USER_ROLES.ADMIN]
       }
     ];
   }
@@ -121,19 +122,19 @@ export class Sidebar implements OnInit {
         label: 'Dashboard',
         route: '/manager',
         icon: 'home',
-        roles: ['Manager']
+        roles: [USER_ROLES.MANAGER]
       },
       {
         label: 'Effort Assignment',
         route: '/manager/effort-assignment',
         icon: 'chart-pie',
-        roles: ['Manager']
+        roles: [USER_ROLES.MANAGER]
       },
       {
         label: 'Reports',
         route: '/manager/reports',
         icon: 'chart-bar',
-        roles: ['Manager']
+        roles: [USER_ROLES.MANAGER]
       }
     ];
   }
@@ -144,13 +145,13 @@ export class Sidebar implements OnInit {
         label: 'Dashboard',
         route: '/employee',
         icon: 'home',
-        roles: ['Employee']
+        roles: [USER_ROLES.EMPLOYEE]
       },
       {
         label: 'Documents',
         route: '/employee/documents',
         icon: 'document',
-        roles: ['Employee']
+        roles: [USER_ROLES.EMPLOYEE]
       }
     ];
   }
@@ -169,6 +170,23 @@ export class Sidebar implements OnInit {
 
   onCloseSidebar(): void {
     this.closeSidebar.emit();
+  }
+
+  navigateToDashboard(): void {
+    const user = this.authService.getCurrentUser();
+    if (!user) return;
+
+    switch (user.role) {
+      case UserRole.Admin:
+        this.onNavigate('/admin');
+        break;
+      case UserRole.Manager:
+        this.onNavigate('/manager');
+        break;
+      case UserRole.Employee:
+        this.onNavigate('/employee');
+        break;
+    }
   }
 
   getIconPath(iconName: string): string {
@@ -206,17 +224,17 @@ export class Sidebar implements OnInit {
     return user.name[0].toUpperCase();
   }
 
-  getRoleColor(): string {
+  getRoleAvatarClass(): string {
     const user = this.authService.getCurrentUser();
     if (!user) return 'bg-secondary-500';
     
     switch (user.role) {
-      case USER_ROLES.ADMIN:
-        return 'bg-danger-500';
-      case USER_ROLES.MANAGER:
-        return 'bg-warning-500';
-      case USER_ROLES.EMPLOYEE:
-        return 'bg-primary-500';
+      case UserRole.Admin:
+        return 'bg-danger-500 hover:bg-danger-600';
+      case UserRole.Manager:
+        return 'bg-warning-500 hover:bg-warning-600';
+      case UserRole.Employee:
+        return 'bg-primary-500 hover:bg-primary-600';
       default:
         return 'bg-secondary-500';
     }
@@ -227,15 +245,61 @@ export class Sidebar implements OnInit {
     if (!user) return 'bg-secondary-100 text-secondary-800';
     
     switch (user.role) {
-      case USER_ROLES.ADMIN:
+      case UserRole.Admin:
         return 'bg-danger-100 text-danger-800';
-      case USER_ROLES.MANAGER:
+      case UserRole.Manager:
         return 'bg-warning-100 text-warning-800';
-      case USER_ROLES.EMPLOYEE:
+      case UserRole.Employee:
         return 'bg-primary-100 text-primary-800';
       default:
         return 'bg-secondary-100 text-secondary-800';
     }
+  }
+
+  getNavItemClasses(route: string): string {
+    const baseClass = 'text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100';
+    const activeClass = 'bg-primary-100 text-primary-700 border-primary-600';
+    
+    return this.isRouteActive(route) ? activeClass : baseClass;
+  }
+
+  getNavigationSummary(): { total: number; current: string } {
+    const activeItem = this.navigationItems.find(item => this.isRouteActive(item.route));
+    return {
+      total: this.navigationItems.length,
+      current: activeItem?.label || 'Dashboard'
+    };
+  }
+
+  getActiveSection(): string {
+    const activeItem = this.navigationItems.find(item => this.isRouteActive(item.route));
+    return activeItem?.label || 'Dashboard';
+  }
+
+  hasSecondaryNavigation(): boolean {
+    return true; // Always show secondary navigation for profile/settings access
+  }
+
+  getNotificationCount(route: string): number {
+    // Mock notification counts - implement based on business logic
+    const notifications: { [key: string]: number } = {
+      '/admin/hr-import': 0,
+      '/admin/documents': 0,
+      '/manager/effort-assignment': 0
+    };
+    return notifications[route] || 0;
+  }
+
+  getLastUpdateTime(): string {
+    return new Date().toISOString();
+  }
+
+  getRelativeTime(): string {
+    return 'just now';
+  }
+
+  trackByRoute(index: number, item: NavigationItem): string {
+    return item.route;
   }
 
   // Quick actions
@@ -249,18 +313,15 @@ export class Sidebar implements OnInit {
     this.closeSidebar.emit();
   }
 
-  onLogout(): void {
-    this.authService.logout();
+  onHelp(): void {
+    // TODO: Implement help/support functionality
+    console.log('Help & Support clicked');
     this.closeSidebar.emit();
   }
 
-  // Get navigation summary for current role
-  getNavigationSummary(): { total: number; current: string } {
-    const activeItem = this.navigationItems.find(item => this.isRouteActive(item.route));
-    return {
-      total: this.navigationItems.length,
-      current: activeItem?.label || 'Dashboard'
-    };
+  onLogout(): void {
+    this.authService.logout();
+    this.closeSidebar.emit();
   }
 
   // Check if user has access to specific navigation item
@@ -268,15 +329,6 @@ export class Sidebar implements OnInit {
     const user = this.authService.getCurrentUser();
     if (!user) return false;
     
-    return item.roles.includes(user.role as string);
-  }
-
-  // Get menu statistics for admin dashboard
-  getMenuStats(): { adminItems: number; managerItems: number; employeeItems: number } {
-    return {
-      adminItems: this.getAdminNavigation().length,
-      managerItems: this.getManagerNavigation().length,
-      employeeItems: this.getEmployeeNavigation().length
-    };
+    return item.roles.includes(user.role as UserRole);
   }
 }
