@@ -1,0 +1,59 @@
+/* src/app/features/admin/admin-layout/admin-layout.css */
+
+/* Layout container */
+.layout-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+/* Main content animations */
+.main-content {
+  transition: margin-left 0.3s ease-in-out;
+}
+
+/* Admin-specific theme colors */
+.admin-theme {
+  --admin-primary: #dc2626;
+  --admin-primary-light: #fecaca;
+  --admin-accent: #b91c1c;
+}
+
+/* Content area styling */
+.content-area {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  margin: 1rem;
+  padding: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .content-area {
+    margin: 0.5rem;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+}
+
+/* Loading states */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

@@ -1,0 +1,316 @@
+/* Enhanced Sidebar Component Styles */
+
+/* Sidebar container with glassmorphism effect */
+.sidebar-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* Smooth transitions for sidebar toggle */
+.sidebar-transition {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Navigation item hover effects */
+.nav-item {
+  position: relative;
+  transition: all 0.2s ease-in-out;
+  border-radius: 0.5rem;
+  margin: 0.125rem 0;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  border-radius: 0 2px 2px 0;
+  transform: scaleY(0);
+  transition: transform 0.2s ease;
+}
+
+.nav-item:hover::before {
+  transform: scaleY(1);
+}
+
+.nav-item.active::before {
+  transform: scaleY(1);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+/* Icon animations */
+.nav-icon {
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover .nav-icon {
+  transform: scale(1.1);
+  color: #3b82f6;
+}
+
+.nav-item.active .nav-icon {
+  color: #2563eb;
+  transform: scale(1.05);
+}
+
+/* Text animation */
+.nav-text {
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.nav-item:hover .nav-text {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.nav-item.active .nav-text {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+/* User section styling */
+.user-section {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* User avatar with role-based styling */
+.user-avatar {
+  transition: all 0.3s ease;
+  box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+}
+
+.user-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.avatar-admin {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+.avatar-manager {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+}
+
+.avatar-employee {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+/* Role badge animations */
+.role-badge {
+  transition: all 0.2s ease;
+  animation: pulse-soft 3s infinite;
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(0.98); }
+}
+
+/* Quick actions section */
+.quick-actions {
+  background: rgba(248, 250, 252, 0.8);
+}
+
+.quick-action-btn {
+  transition: all 0.2s ease;
+  border-radius: 0.5rem;
+}
+
+.quick-action-btn:hover {
+  background: rgba(59, 130, 246, 0.1);
+  transform: translateX(2px);
+}
+
+.quick-action-btn.logout:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+/* Mobile overlay */
+.mobile-overlay {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+}
+
+/* Footer status indicator */
+.status-indicator {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Scrollbar styling for navigation */
+.nav-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.nav-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nav-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.5);
+  border-radius: 2px;
+}
+
+.nav-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+
+/* Focus states for accessibility */
+.focus-outline:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Loading state for navigation items */
+.nav-loading {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .sidebar-container {
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  }
+}
+
+@media (max-width: 768px) {
+  .nav-item {
+    margin: 0.25rem 0;
+  }
+  
+  .nav-text {
+    font-size: 0.875rem;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .nav-item::before {
+    background: #000;
+  }
+  
+  .nav-item:hover {
+    background: #000;
+    color: #fff;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .nav-item,
+  .nav-icon,
+  .nav-text,
+  .user-avatar,
+  .quick-action-btn {
+    transition: none;
+  }
+  
+  .nav-item::before {
+    transition: none;
+  }
+  
+  .role-badge,
+  .status-indicator {
+    animation: none;
+  }
+}
+
+/* Dark mode support (future implementation) */
+@media (prefers-color-scheme: dark) {
+  .sidebar-container {
+    background: rgba(17, 24, 39, 0.95);
+    border-right-color: rgba(75, 85, 99, 0.8);
+  }
+  
+  .user-section {
+    background: rgba(31, 41, 55, 0.8);
+    border-color: rgba(75, 85, 99, 0.8);
+  }
+  
+  .quick-actions {
+    background: rgba(31, 41, 55, 0.8);
+  }
+}
+
+/* Custom utility classes */
+.sidebar-brand {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.3);
+}
+
+.navigation-divider {
+  background: linear-gradient(90deg, transparent 0%, #e2e8f0 50%, transparent 100%);
+  height: 1px;
+  margin: 0.5rem 0;
+}
+
+/* Active route highlighting */
+.active-route-indicator {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 70%;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border-radius: 2px 0 0 2px;
+  box-shadow: -2px 0 8px rgba(37, 99, 235, 0.3);
+}
+
+/* Menu section headers */
+.menu-section-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin: 1rem 0 0.5rem 0;
+  padding: 0 1rem;
+}
+
+/* Enhanced tooltips for collapsed sidebar (future feature) */
+.nav-tooltip {
+  position: absolute;
+  left: 100%;
+  margin-left: 0.5rem;
+  background: #1f2937;
+  color: #f9fafb;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1000;
+}
+
+.nav-tooltip::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 4px solid transparent;
+  border-right-color: #1f2937;
+}

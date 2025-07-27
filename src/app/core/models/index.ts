@@ -45,6 +45,7 @@ export interface UserDTO {
   isDeleted: boolean;
   deletedAt?: Date;
   deletedByName?: string;
+  createdAt?: Date;  // Add this field
 }
 
 // ===================================

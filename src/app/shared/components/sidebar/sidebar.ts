@@ -1,3 +1,4 @@
+// src/app/shared/components/sidebar/sidebar.ts
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd } from '@angular/router';
@@ -67,49 +68,49 @@ export class Sidebar implements OnInit {
         label: 'Dashboard',
         route: '/admin',
         icon: 'home',
-        roles: [USER_ROLES.ADMIN]
+        roles: ['Admin']
       },
       {
         label: 'User Management',
         route: '/admin/users',
         icon: 'users',
-        roles: [USER_ROLES.ADMIN]
+        roles: ['Admin']
       },
       {
         label: 'Client Management',
         route: '/admin/clients',
         icon: 'office-building',
-        roles: [USER_ROLES.ADMIN]
+        roles: ['Admin']
       },
       {
         label: 'Process Management',
         route: '/admin/processes',
         icon: 'cog',
-        roles: [USER_ROLES.ADMIN]
+        roles: ['Admin']
       },
       {
         label: 'Document Management',
         route: '/admin/documents',
         icon: 'document',
-        roles: [USER_ROLES.ADMIN]
+        roles: ['Admin']
       },
       {
         label: 'HR Import',
         route: '/admin/hr-import',
         icon: 'upload',
-        roles: [USER_ROLES.ADMIN]
+        roles: ['Admin']
       },
       {
         label: 'Reports',
         route: '/admin/reports',
         icon: 'chart-bar',
-        roles: [USER_ROLES.ADMIN]
+        roles: ['Admin']
       },
       {
         label: 'Recycle Bin',
         route: '/admin/recycle-bin',
         icon: 'trash',
-        roles: [USER_ROLES.ADMIN]
+        roles: ['Admin']
       }
     ];
   }
@@ -120,19 +121,19 @@ export class Sidebar implements OnInit {
         label: 'Dashboard',
         route: '/manager',
         icon: 'home',
-        roles: [USER_ROLES.MANAGER]
+        roles: ['Manager']
       },
       {
         label: 'Effort Assignment',
         route: '/manager/effort-assignment',
         icon: 'chart-pie',
-        roles: [USER_ROLES.MANAGER]
+        roles: ['Manager']
       },
       {
         label: 'Reports',
         route: '/manager/reports',
         icon: 'chart-bar',
-        roles: [USER_ROLES.MANAGER]
+        roles: ['Manager']
       }
     ];
   }
@@ -143,13 +144,13 @@ export class Sidebar implements OnInit {
         label: 'Dashboard',
         route: '/employee',
         icon: 'home',
-        roles: [USER_ROLES.EMPLOYEE]
+        roles: ['Employee']
       },
       {
         label: 'Documents',
         route: '/employee/documents',
         icon: 'document',
-        roles: [USER_ROLES.EMPLOYEE]
+        roles: ['Employee']
       }
     ];
   }
@@ -267,7 +268,7 @@ export class Sidebar implements OnInit {
     const user = this.authService.getCurrentUser();
     if (!user) return false;
     
-    return item.roles.includes(user.role);
+    return item.roles.includes(user.role as string);
   }
 
   // Get menu statistics for admin dashboard
