@@ -1,1 +1,436 @@
-<p>document-viewer works!</p>
+<!-- src/app/features/employee/pages/employee-documents/employee-documents.component.html -->
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">My Documents</h1>
+          <p class="mt-1 text-sm text-gray-600">
+            Access documents for clients you're assigned to
+          </p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+          <button
+            type="button"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            (click)="refreshDocuments()"
+            [disabled]="isLoading"
+          >
+            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="bg-white rounded-lg shadow mb-6">
+      <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Search -->
+          <div class="lg:col-span-2">
+            <label for="search" class="block text-sm font-medium text-gray-700 mb-2">
+              Search Documents
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+              </div>
+              <input
+                id="search"
+                type="text"
+                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                placeholder="Search by document name, client, process..."
+                [(ngModel)]="filter.search"
+                (input)="onSearchChange($event.target.value)"
+              />
+            </div>
+          </div>
+
+          <!-- Client Filter -->
+          <div>
+            <label for="client-filter" class="block text-sm font-medium text-gray-700 mb-2">
+              Client
+            </label>
+            <select
+              id="client-filter"
+              class="block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              [(ngModel)]="filter.clientName"
+              (change)="onFilterChange()"
+            >
+              <option value="">All Clients</option>
+              <option *ngFor="let client of availableClients" [value]="client">
+                {{ client }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Process Filter -->
+          <div>
+            <label for="process-filter" class="block text-sm font-medium text-gray-700 mb-2">
+              Process
+            </label>
+            <select
+              id="process-filter"
+              class="block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              [(ngModel)]="filter.processName"
+              (change)="onFilterChange()"
+            >
+              <option value="">All Processes</option>
+              <option *ngFor="let process of availableProcesses" [value]="process">
+                {{ process }}
+              </option>
+            </select>
+          </div>
+
+          <!-- File Type Filter -->
+          <div>
+            <label for="type-filter" class="block text-sm font-medium text-gray-700 mb-2">
+              File Type
+            </label>
+            <select
+              id="type-filter"
+              class="block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              [(ngModel)]="filter.mimeType"
+              (change)="onFilterChange()"
+            >
+              <option value="">All Types</option>
+              <option *ngFor="let type of availableMimeTypes" [value]="type.value">
+                {{ type.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Clear Filters -->
+          <div class="lg:col-span-4 flex justify-between items-center pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              class="text-sm text-primary-600 hover:text-primary-500"
+              (click)="clearFilters()"
+            >
+              Clear all filters
+            </button>
+            <div class="text-sm text-gray-500">
+              {{ totalDocuments }} document{{ totalDocuments !== 1 ? 's' : '' }} found
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="flex justify-center items-center py-12">
+      <app-loading 
+        type="spinner" 
+        size="lg" 
+        [showText]="true" 
+        text="Loading documents..."
+      ></app-loading>
+    </div>
+
+    <!-- Documents Grid -->
+    <div *ngIf="!isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div
+        *ngFor="let document of paginatedDocuments; trackBy: trackByDocumentId"
+        class="bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200 overflow-hidden group"
+      >
+        <!-- Document Preview/Thumbnail -->
+        <div class="h-48 bg-gray-100 relative overflow-hidden">
+          <!-- Image preview for image files -->
+          <div *ngIf="isImageFile(document.mimeType)" class="h-full w-full">
+            <div class="h-full w-full bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+              <svg class="h-16 w-16 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- File icon for other file types -->
+          <div *ngIf="!isImageFile(document.mimeType)" class="h-full w-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+            <svg class="h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getFileIcon(document.mimeType)"></path>
+            </svg>
+          </div>
+
+          <!-- Overlay actions -->
+          <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+            <div class="flex space-x-2">
+              <button
+                type="button"
+                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+                (click)="previewDocument(document)"
+                [title]="'Preview ' + document.documentName"
+              >
+                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                View
+              </button>
+              <button
+                type="button"
+                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+                (click)="downloadDocument(document)"
+                [title]="'Download ' + document.documentName"
+                [disabled]="isDownloading"
+              >
+                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-4-4m4 4l4-4m-6 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Download
+              </button>
+            </div>
+          </div>
+
+          <!-- File size badge -->
+          <div class="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+            {{ formatFileSize(document.fileSize) }}
+          </div>
+        </div>
+
+        <!-- Document Info -->
+        <div class="p-4">
+          <h3 class="text-sm font-medium text-gray-900 truncate mb-2" [title]="document.documentName">
+            {{ document.documentName }}
+          </h3>
+          
+          <div class="space-y-2">
+            <!-- Client and Process -->
+            <div class="flex items-center text-xs text-gray-500">
+              <svg class="h-3 w-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+              </svg>
+              <span class="truncate">{{ document.clientName }}</span>
+            </div>
+            
+            <div class="flex items-center text-xs text-gray-500">
+              <svg class="h-3 w-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+              </svg>
+              <span class="truncate">{{ document.processName }}</span>
+            </div>
+
+            <!-- Upload info -->
+            <div class="flex items-center justify-between text-xs text-gray-500">
+              <span class="truncate">by {{ document.uploadedByName }}</span>
+              <span class="flex-shrink-0 ml-2" [title]="formatDate(document.createdAt)">
+                {{ getRelativeTime(document.createdAt) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && filteredDocuments.length === 0" class="text-center py-12">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900">No documents found</h3>
+      <p class="mt-1 text-sm text-gray-500">
+        {{ filter.search || filter.clientName || filter.processName || filter.mimeType 
+           ? 'Try adjusting your filters or search terms.'
+           : 'You don\'t have access to any documents yet. Documents will appear here when you\'re assigned to clients.' }}
+      </p>
+      <div class="mt-6">
+        <button
+          type="button"
+          class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          (click)="clearFilters()"
+          *ngIf="filter.search || filter.clientName || filter.processName || filter.mimeType"
+        >
+          Clear filters
+        </button>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="!isLoading && filteredDocuments.length > 0" class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow mt-6">
+      <div class="flex-1 flex justify-between sm:hidden">
+        <button
+          type="button"
+          class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          (click)="onPageChange(currentPage - 1)"
+          [disabled]="currentPage === 1"
+        >
+          Previous
+        </button>
+        <button
+          type="button"
+          class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          (click)="onPageChange(currentPage + 1)"
+          [disabled]="currentPage === totalPages"
+        >
+          Next
+        </button>
+      </div>
+      <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+        <div>
+          <p class="text-sm text-gray-700">
+            Showing
+            <span class="font-medium">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
+            to
+            <span class="font-medium">{{ Math.min(currentPage * itemsPerPage, totalDocuments) }}</span>
+            of
+            <span class="font-medium">{{ totalDocuments }}</span>
+            results
+          </p>
+        </div>
+        <div>
+          <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            <!-- Previous button -->
+            <button
+              type="button"
+              class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              (click)="onPageChange(currentPage - 1)"
+              [disabled]="currentPage === 1"
+              [class.opacity-50]="currentPage === 1"
+              [class.cursor-not-allowed]="currentPage === 1"
+            >
+              <span class="sr-only">Previous</span>
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </button>
+
+            <!-- Page numbers -->
+            <button
+              *ngFor="let page of getPageNumbers()"
+              type="button"
+              class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
+              [class.bg-primary-50]="page === currentPage"
+              [class.border-primary-500]="page === currentPage"
+              [class.text-primary-600]="page === currentPage"
+              [class.bg-white]="page !== currentPage"
+              [class.border-gray-300]="page !== currentPage"
+              [class.text-gray-500]="page !== currentPage"
+              [class.hover:bg-gray-50]="page !== currentPage"
+              (click)="onPageChange(page)"
+            >
+              {{ page }}
+            </button>
+
+            <!-- Next button -->
+            <button
+              type="button"
+              class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              (click)="onPageChange(currentPage + 1)"
+              [disabled]="currentPage === totalPages"
+              [class.opacity-50]="currentPage === totalPages"
+              [class.cursor-not-allowed]="currentPage === totalPages"
+            >
+              <span class="sr-only">Next</span>
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Document Preview Modal -->
+<app-modal
+  [isOpen]="showPreviewModal"
+  [title]="selectedDocument?.documentName || 'Document Preview'"
+  size="xl"
+  [showHeader]="true"
+  [showFooter]="true"
+  [showCloseButton]="true"
+  [showCancelButton]="false"
+  [showConfirmButton]="true"
+  [confirmButtonText]="'Download'"
+  (close)="closePreviewModal()"
+  (confirm)="selectedDocument && downloadDocument(selectedDocument)"
+>
+  <div *ngIf="selectedDocument" class="space-y-4">
+    <!-- Document info -->
+    <div class="bg-gray-50 rounded-lg p-4">
+      <dl class="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <dt class="font-medium text-gray-900">File Name</dt>
+          <dd class="text-gray-700">{{ selectedDocument.documentName }}</dd>
+        </div>
+        <div>
+          <dt class="font-medium text-gray-900">File Size</dt>
+          <dd class="text-gray-700">{{ formatFileSize(selectedDocument.fileSize) }}</dd>
+        </div>
+        <div>
+          <dt class="font-medium text-gray-900">Client</dt>
+          <dd class="text-gray-700">{{ selectedDocument.clientName }}</dd>
+        </div>
+        <div>
+          <dt class="font-medium text-gray-900">Process</dt>
+          <dd class="text-gray-700">{{ selectedDocument.processName }}</dd>
+        </div>
+        <div>
+          <dt class="font-medium text-gray-900">Uploaded By</dt>
+          <dd class="text-gray-700">{{ selectedDocument.uploadedByName }}</dd>
+        </div>
+        <div>
+          <dt class="font-medium text-gray-900">Upload Date</dt>
+          <dd class="text-gray-700">{{ formatDate(selectedDocument.createdAt) }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <!-- Preview content -->
+    <div class="border rounded-lg p-6 min-h-96 bg-white">
+      <!-- Text content preview -->
+      <div *ngIf="previewContent" class="whitespace-pre-wrap font-mono text-sm">
+        {{ previewContent }}
+      </div>
+      
+      <!-- Image preview placeholder -->
+      <div *ngIf="isImageFile(selectedDocument.mimeType) && !previewContent" class="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+        <div class="text-center">
+          <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <p class="mt-2 text-sm text-gray-500">Image preview not available</p>
+          <p class="text-xs text-gray-400">Click Download to view the image</p>
+        </div>
+      </div>
+      
+      <!-- PDF/Other file preview placeholder -->
+      <div *ngIf="!isImageFile(selectedDocument.mimeType) && !previewContent" class="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+        <div class="text-center">
+          <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getFileIcon(selectedDocument.mimeType)"></path>
+          </svg>
+          <p class="mt-2 text-sm text-gray-500">{{ getMimeTypeLabel(selectedDocument.mimeType) }}</p>
+          <p class="text-xs text-gray-400">Click Download to view the file</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="flex justify-center space-x-3">
+      <button
+        type="button"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+        (click)="closePreviewModal()"
+      >
+        Close
+      </button>
+      <button
+        type="button"
+        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+        (click)="downloadDocument(selectedDocument)"
+      >
+        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-4-4m4 4l4-4m-6 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+        </svg>
+        Download
+      </button>
+    </div>
+  </div>
+</app-modal>

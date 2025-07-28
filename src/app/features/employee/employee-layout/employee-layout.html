@@ -1,28 +1,24 @@
-<!-- src/app/features/employee/employee-layout/employee-layout.html -->
-<div class="flex h-screen bg-gray-100">
+<!-- src/app/features/employee/layouts/employee-layout/employee-layout.component.html -->
+<div class="min-h-screen bg-gray-50">
   <!-- Sidebar -->
-  <app-sidebar 
+  <app-sidebar
     [isOpen]="sidebarOpen"
-    (closeSidebar)="closeSidebar()"
+    [role]="currentUser?.role || ''"
+    (closeSidebar)="onCloseSidebar()"
   ></app-sidebar>
 
   <!-- Main content area -->
-  <div class="flex-1 flex flex-col overflow-hidden">
+  <div class="lg:pl-64">
     <!-- Header -->
-    <app-header 
-      title="Employee Portal"
+    <app-header
+      title="SOP Portal - Employee"
       [showSidebarToggle]="true"
-      (toggleSidebar)="toggleSidebar()"
+      (toggleSidebar)="onToggleSidebar()"
     ></app-header>
 
-    <!-- Main content -->
-    <main class="flex-1 relative overflow-y-auto focus:outline-none">
-      <div class="py-6">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-          <!-- Page content -->
-          <router-outlet></router-outlet>
-        </div>
-      </div>
+    <!-- Page content -->
+    <main class="flex-1">
+      <router-outlet></router-outlet>
     </main>
   </div>
 </div>

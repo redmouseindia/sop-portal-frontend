@@ -1,0 +1,236 @@
+<!-- src/app/features/admin/dashboard/admin-dashboard.component.html -->
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header Section -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p class="mt-1 text-sm text-gray-600">
+            Manage users, clients, processes, and system configuration
+          </p>
+        </div>
+        
+        <button
+          type="button"
+          class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+          (click)="refreshData()"
+          [disabled]="isLoading"
+        >
+          <svg class="mr-2 h-4 w-4" [class.animate-spin]="isLoading" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          {{ isLoading ? 'Refreshing...' : 'Refresh Data' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="flex items-center justify-center py-12">
+      <app-loading type="spinner" size="lg" [showText]="true" text="Loading dashboard data..."></app-loading>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div *ngIf="!isLoading">
+      <!-- Statistics Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Users -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div class="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="ml-4">
+                <div class="text-2xl font-bold text-gray-900">{{ stats.totalUsers }}</div>
+                <div class="text-sm text-gray-600">Total Users</div>
+                <div class="text-xs text-green-600 mt-1">{{ stats.activeUsers }} active</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total Clients -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div class="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="ml-4">
+                <div class="text-2xl font-bold text-gray-900">{{ stats.totalClients }}</div>
+                <div class="text-sm text-gray-600">Total Clients</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total Processes -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div class="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="ml-4">
+                <div class="text-2xl font-bold text-gray-900">{{ stats.totalProcesses }}</div>
+                <div class="text-sm text-gray-600">Total Processes</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total Documents -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div class="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <svg class="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="ml-4">
+                <div class="text-2xl font-bold text-gray-900">{{ stats.totalDocuments }}</div>
+                <div class="text-sm text-gray-600">Total Documents</div>
+                <div class="text-xs text-blue-600 mt-1">{{ stats.recentUploads }} this week</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions Grid -->
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div
+            *ngFor="let action of quickActions"
+            class="cursor-pointer group bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200 transform hover:-translate-y-1"
+            [class]="action.bgColor + ' hover:' + action.bgColor"
+            (click)="navigateTo(action.route)"
+          >
+            <div class="flex items-center">
+              <div 
+                class="flex-shrink-0 h-12 w-12 rounded-lg flex items-center justify-center border"
+                [class]="action.bgColor + ' ' + action.borderColor + ' group-hover:scale-110 transition-transform'"
+              >
+                <svg 
+                  class="h-6 w-6"
+                  [class]="action.color"
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round" 
+                    stroke-width="2" 
+                    [attr.d]="getIconPath(action.icon)"
+                  ></path>
+                </svg>
+              </div>
+              <div class="ml-4 flex-1">
+                <h3 class="text-lg font-medium text-gray-900 group-hover:text-gray-700">
+                  {{ action.title }}
+                </h3>
+                <p class="text-sm text-gray-600 mt-1">
+                  {{ action.description }}
+                </p>
+              </div>
+              <div class="ml-2">
+                <svg class="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity and System Status -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Recent Activity -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Recent Activity</h3>
+          </div>
+          <div class="p-6">
+            <div class="text-center py-8">
+              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+              <p class="mt-2 text-sm text-gray-600">No recent activity</p>
+              <p class="text-xs text-gray-500 mt-1">Activity will appear here as users interact with the system</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Status -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">System Status</h3>
+          </div>
+          <div class="p-6">
+            <div class="space-y-4">
+              <!-- Database Status -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <div class="h-3 w-3 bg-green-400 rounded-full mr-3"></div>
+                  <span class="text-sm font-medium text-gray-900">Database</span>
+                </div>
+                <span class="text-sm text-green-600 font-medium">Online</span>
+              </div>
+
+              <!-- API Status -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <div class="h-3 w-3 bg-green-400 rounded-full mr-3"></div>
+                  <span class="text-sm font-medium text-gray-900">API Services</span>
+                </div>
+                <span class="text-sm text-green-600 font-medium">Operational</span>
+              </div>
+
+              <!-- File Storage -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <div class="h-3 w-3 bg-green-400 rounded-full mr-3"></div>
+                  <span class="text-sm font-medium text-gray-900">File Storage</span>
+                </div>
+                <span class="text-sm text-green-600 font-medium">Available</span>
+              </div>
+
+              <!-- Last Backup -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <div class="h-3 w-3 bg-yellow-400 rounded-full mr-3"></div>
+                  <span class="text-sm font-medium text-gray-900">Last Backup</span>
+                </div>
+                <span class="text-sm text-yellow-600 font-medium">2 hours ago</span>
+              </div>
+
+              <!-- Effort Assignments -->
+              <div class="flex items-center justify-between pt-2 border-t border-gray-200">
+                <span class="text-sm font-medium text-gray-900">Total Effort Assignments</span>
+                <span class="text-sm text-gray-600 font-medium">{{ stats.totalEffortAssignments }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

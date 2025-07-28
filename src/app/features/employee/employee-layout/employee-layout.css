@@ -1,59 +1,154 @@
-/* src/app/features/employee/employee-layout/employee-layout.css */
+/* src/app/features/employee/layouts/employee-layout/employee-layout.component.css */
 
-/* Layout container */
-.layout-container {
+/* Employee Layout Specific Styles */
+
+/* Main container adjustments */
+.main-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 }
 
-/* Main content animations */
-.main-content {
+/* Content area with sidebar offset */
+.content-area {
   transition: margin-left 0.3s ease-in-out;
 }
 
-/* Employee-specific theme colors */
-.employee-theme {
-  --employee-primary: #2563eb;
-  --employee-primary-light: #bfdbfe;
-  --employee-accent: #1d4ed8;
+@media (min-width: 1024px) {
+  .content-area {
+    margin-left: 16rem; /* 64 * 0.25rem = 16rem for sidebar width */
+  }
 }
 
-/* Content area styling */
-.content-area {
-  background: rgba(255, 255, 255, 0.9);
+/* Header adjustments for employee role */
+.employee-header {
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  margin: 1rem;
-  padding: 1.5rem;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+/* Main content area */
+.main-content {
+  min-height: calc(100vh - 4rem); /* Subtract header height */
+  background: transparent;
+}
+
+/* Employee-specific color scheme */
+.employee-accent {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: #3b82f6;
+}
+
+.employee-badge {
+  background: #dbeafe;
+  color: #1e40af;
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
   .content-area {
-    margin: 0.5rem;
+    margin-left: 0;
+  }
+  
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 40;
+  }
+}
+
+/* Mobile-first responsive design */
+@media (max-width: 640px) {
+  .main-content {
     padding: 1rem;
-    border-radius: 8px;
+  }
+  
+  .content-area {
+    min-height: 100vh;
   }
 }
 
 /* Loading states */
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.8);
+.content-loading {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
+  min-height: 50vh;
+}
+
+/* Focus states for accessibility */
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #000;
+  color: #fff;
+  padding: 8px;
+  text-decoration: none;
+  z-index: 1000;
+  border-radius: 4px;
+}
+
+.skip-to-content:focus {
+  top: 6px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .employee-header {
+    border-bottom: 2px solid #000;
+  }
+  
+  .main-content {
+    background: #fff;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .main-container {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  }
+  
+  .employee-header {
+    background: rgba(31, 41, 55, 0.95);
+    border-bottom-color: rgba(75, 85, 99, 0.3);
+  }
+  
+  .main-content {
+    background: transparent;
+  }
+  
+  .employee-accent {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  }
+  
+  .employee-badge {
+    background: #1e3a8a;
+    color: #93c5fd;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .content-area {
+    transition: none;
+  }
 }
 
 /* Print styles */
 @media print {
-  .no-print {
+  .employee-header,
+  app-sidebar {
     display: none !important;
+  }
+  
+  .content-area {
+    margin-left: 0 !important;
+  }
+  
+  .main-content {
+    min-height: auto;
+    background: #fff !important;
   }
 }
